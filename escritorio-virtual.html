@@ -1,0 +1,2105 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Escritório Virtual — Emillyn Amorim</title>
+<style>
+  :root {
+    --pink: #e8847a; --pink-light: #f5d5d2; --pink-dark: #c9635a;
+    --cream: #fdf8f5; --brown: #6b4c3b; --gray: #8a8a8a; --gray-light: #f2f2f2;
+    --text: #2d2d2d; --white: #ffffff; --green: #5a9e7a; --yellow: #d4a852;
+    --red: #cc5c5c; --blue: #5a7db5; --purple: #8b6db5; --orange: #c97030;
+    --sidebar-w: 220px; --radius: 12px; --shadow: 0 2px 12px rgba(0,0,0,.08);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--cream); color: var(--text); display: flex; min-height: 100vh; }
+
+  .sidebar { width: var(--sidebar-w); min-height: 100vh; background: var(--white); border-right: 1px solid #ede8e5; position: fixed; top: 0; left: 0; display: flex; flex-direction: column; z-index: 100; overflow-y: auto; }
+  .sidebar-logo { padding: 20px 20px 14px; border-bottom: 1px solid #ede8e5; flex-shrink: 0; }
+  .sidebar-logo h1 { font-size: 13px; font-weight: 700; color: var(--pink-dark); letter-spacing: .5px; text-transform: uppercase; }
+  .sidebar-logo p { font-size: 11px; color: var(--gray); margin-top: 2px; }
+  .nav { flex: 1; padding: 10px 0; }
+  .nav-item { display: flex; align-items: center; gap: 10px; padding: 9px 20px; font-size: 13px; color: var(--brown); cursor: pointer; transition: all .15s; border-left: 3px solid transparent; text-decoration: none; }
+  .nav-item:hover { background: var(--pink-light); }
+  .nav-item.active { background: var(--pink-light); border-left-color: var(--pink); color: var(--pink-dark); font-weight: 600; }
+  .nav-icon { font-size: 15px; width: 20px; text-align: center; }
+  .nav-divider { height: 1px; background: #ede8e5; margin: 6px 16px; }
+  .sidebar-footer { padding: 10px 16px; border-top: 1px solid #ede8e5; font-size: 11px; color: var(--gray); flex-shrink: 0; }
+  .sidebar-sync { display:flex; align-items:center; justify-content:space-between; gap:6px; margin-bottom:6px; }
+  .sync-status { font-size:10px; color:var(--gray); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; flex:1; }
+  .btn-sync { background:var(--cream); border:1.5px solid #ddd; border-radius:7px; padding:5px 10px; font-size:11px; font-weight:600; cursor:pointer; color:var(--brown); white-space:nowrap; transition:background .15s; }
+  .btn-sync:hover { background:#ede8e5; }
+  .btn-sync.syncing { opacity:.6; pointer-events:none; }
+
+  .main { margin-left: var(--sidebar-w); flex: 1; padding: 28px; min-height: 100vh; }
+  .page { display: none; }
+  .page.active { display: block; }
+  .page-header { margin-bottom: 24px; display: flex; justify-content: space-between; align-items: flex-start; }
+  .page-header-left h2 { font-size: 22px; font-weight: 700; color: var(--brown); }
+  .page-header-left p { color: var(--gray); font-size: 14px; margin-top: 4px; }
+
+  .cards { display: grid; gap: 14px; margin-bottom: 20px; }
+  .cards-2 { grid-template-columns: repeat(2,1fr); }
+  .cards-3 { grid-template-columns: repeat(3,1fr); }
+  .cards-4 { grid-template-columns: repeat(4,1fr); }
+  .card { background: var(--white); border-radius: var(--radius); box-shadow: var(--shadow); padding: 18px; }
+  .card-label { font-size: 11px; text-transform: uppercase; letter-spacing: .7px; color: var(--gray); font-weight: 600; }
+  .card-value { font-size: 24px; font-weight: 700; color: var(--text); margin: 5px 0 2px; }
+  .card-sub { font-size: 12px; color: var(--gray); }
+  .card-accent { border-left: 4px solid var(--pink); }
+  .card-green { border-left: 4px solid var(--green); }
+  .card-yellow { border-left: 4px solid var(--yellow); }
+  .card-blue { border-left: 4px solid var(--blue); }
+  .card-purple { border-left: 4px solid var(--purple); }
+
+  .section { background: var(--white); border-radius: var(--radius); box-shadow: var(--shadow); padding: 22px; margin-bottom: 16px; }
+  .section-title { font-size: 14px; font-weight: 700; color: var(--brown); margin-bottom: 14px; display: flex; align-items: center; gap: 8px; justify-content: space-between; }
+  .section-title span { font-size: 14px; font-weight: 700; }
+
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th { text-align: left; padding: 9px 12px; font-size: 11px; text-transform: uppercase; letter-spacing: .5px; color: var(--gray); border-bottom: 2px solid var(--gray-light); font-weight: 600; }
+  td { padding: 9px 12px; border-bottom: 1px solid var(--gray-light); vertical-align: middle; }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: var(--cream); }
+
+  .badge { display: inline-block; padding: 3px 9px; border-radius: 20px; font-size: 11px; font-weight: 600; white-space: nowrap; }
+  .badge-gray { background: #e8e8e8; color: #555; }
+  .badge-blue { background: #dce8f5; color: var(--blue); }
+  .badge-yellow { background: #f5ead0; color: #a07820; }
+  .badge-green { background: #d5eedf; color: var(--green); }
+  .badge-red { background: #f5dcdc; color: var(--red); }
+  .badge-pink { background: var(--pink-light); color: var(--pink-dark); }
+  .badge-purple { background: #e8dff5; color: var(--purple); }
+  .badge-orange { background: #f5e8d5; color: var(--orange); }
+  .badge-dark { background: #2d2d2d; color: white; }
+
+  .btn { display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; border-radius: 8px; border: none; cursor: pointer; font-size: 13px; font-weight: 600; transition: all .15s; font-family: inherit; }
+  .btn-primary { background: var(--pink); color: white; }
+  .btn-primary:hover { background: var(--pink-dark); }
+  .btn-ghost { background: transparent; color: var(--brown); border: 1.5px solid #ddd; }
+  .btn-ghost:hover { background: var(--gray-light); }
+  .btn-wpp { background: #25D366; color: white; }
+  .btn-wpp:hover { background: #1ebe5a; }
+  .btn-dark { background: #2d2d2d; color: white; }
+  .btn-dark:hover { background: #111; }
+  .btn-sm { padding: 5px 11px; font-size: 12px; }
+
+  .form-grid { display: grid; gap: 12px; }
+  .form-grid-2 { grid-template-columns: 1fr 1fr; }
+  .form-grid-3 { grid-template-columns: 1fr 1fr 1fr; }
+  .form-group label { display: block; font-size: 12px; font-weight: 600; color: var(--brown); margin-bottom: 4px; }
+  .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 8px 11px; border: 1.5px solid #ddd; border-radius: 8px; font-size: 13px; font-family: inherit; transition: border .15s; background: white; }
+  .form-group input:focus, .form-group select:focus, .form-group textarea:focus { outline: none; border-color: var(--pink); }
+  .form-group textarea { resize: vertical; min-height: 65px; }
+
+  .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.35); z-index: 200; align-items: center; justify-content: center; }
+  .modal-overlay.open { display: flex; }
+  .modal { background: white; border-radius: 16px; padding: 26px; width: 560px; max-width: 95vw; max-height: 90vh; overflow-y: auto; box-shadow: 0 8px 40px rgba(0,0,0,.15); }
+  .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; }
+  .modal-header h3 { font-size: 16px; font-weight: 700; color: var(--brown); }
+  .modal-close { background: none; border: none; cursor: pointer; font-size: 20px; color: var(--gray); padding: 4px; }
+
+  .progress-bar { height: 7px; background: var(--gray-light); border-radius: 4px; overflow: hidden; margin-top: 6px; }
+  .progress-fill { height: 100%; border-radius: 4px; background: var(--pink); transition: width .5s; }
+  .progress-fill.green { background: var(--green); }
+
+  .prose { font-size: 13px; line-height: 1.7; color: var(--text); }
+  .prose h4 { font-size: 13px; font-weight: 700; color: var(--brown); margin: 14px 0 5px; }
+  .prose p { margin-bottom: 7px; }
+  .prose ul { padding-left: 16px; margin-bottom: 7px; }
+  .prose li { margin-bottom: 3px; }
+  .prose strong { color: var(--brown); }
+
+  .tag-list { display: flex; flex-wrap: wrap; gap: 6px; }
+  .copy-btn { display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; background: var(--gray-light); border: none; border-radius: 6px; cursor: pointer; font-size: 11px; color: var(--gray); transition: all .15s; font-family: inherit; }
+  .copy-btn:hover { background: var(--pink-light); color: var(--pink-dark); }
+
+  .loading { text-align: center; padding: 36px; color: var(--gray); font-size: 13px; }
+  .spinner { display: inline-block; width: 18px; height: 18px; border: 2px solid var(--pink-light); border-top-color: var(--pink); border-radius: 50%; animation: spin .6s linear infinite; margin-right: 8px; vertical-align: middle; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .toast { position: fixed; bottom: 24px; right: 24px; background: var(--text); color: white; padding: 11px 18px; border-radius: 10px; font-size: 13px; opacity: 0; transition: opacity .3s; z-index: 999; }
+  .toast.show { opacity: 1; }
+  .toast.success { background: var(--green); }
+  .toast.error { background: var(--red); }
+
+  .kanban { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 8px; }
+  .kanban-col { min-width: 170px; flex: 1; }
+  .kanban-col-header { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; padding: 7px 11px; border-radius: 8px 8px 0 0; }
+  .kanban-card { background: white; border-radius: 8px; padding: 11px; margin-top: 7px; box-shadow: 0 1px 6px rgba(0,0,0,.07); font-size: 13px; cursor: pointer; }
+  .kanban-card:hover { box-shadow: 0 2px 12px rgba(0,0,0,.12); }
+  .kanban-card .lead-name { font-weight: 600; color: var(--text); margin-bottom: 3px; }
+  .kanban-card .lead-info { font-size: 11px; color: var(--gray); }
+
+  .tab-bar { display: flex; gap: 4px; border-bottom: 2px solid var(--gray-light); margin-bottom: 18px; }
+  .tab-btn { padding: 7px 15px; border: none; background: none; cursor: pointer; font-size: 13px; color: var(--gray); border-bottom: 2px solid transparent; margin-bottom: -2px; transition: all .15s; font-family: inherit; }
+  .tab-btn.active { color: var(--pink-dark); border-bottom-color: var(--pink); font-weight: 600; }
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+
+  .msg-box { background: var(--cream); border: 1px solid #ede8e5; border-radius: 10px; padding: 13px 15px; font-size: 13px; line-height: 1.6; position: relative; margin-bottom: 10px; }
+  .msg-box .msg-label { font-size: 11px; font-weight: 700; color: var(--pink-dark); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 5px; }
+  .msg-copy { position: absolute; top: 11px; right: 11px; }
+
+  /* TAREFAS / STORIES */
+  .days-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 14px; }
+  .day-col { background: var(--white); border-radius: var(--radius); box-shadow: var(--shadow); padding: 14px; }
+  .day-header { font-size: 13px; font-weight: 700; color: var(--brown); border-bottom: 2px solid var(--pink-light); padding-bottom: 7px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
+  .day-header .day-date { font-size: 11px; color: var(--gray); font-weight: 400; }
+  .task-item { display: flex; align-items: flex-start; gap: 7px; padding: 6px 0; border-bottom: 1px solid var(--gray-light); font-size: 13px; }
+  .task-item:last-child { border-bottom: none; }
+  .task-item input[type="checkbox"] { margin-top: 2px; accent-color: var(--pink); cursor: pointer; flex-shrink: 0; }
+  .task-item .task-text { flex: 1; line-height: 1.4; cursor: pointer; }
+  .task-item .task-text.done { text-decoration: line-through; color: var(--gray); }
+  .task-item .task-del { background: none; border: none; cursor: pointer; color: var(--gray); font-size: 12px; opacity: 0; transition: opacity .15s; padding: 2px; }
+  .task-item:hover .task-del { opacity: 1; }
+  .task-add { display: flex; gap: 5px; margin-top: 9px; }
+  .task-add input { flex: 1; padding: 5px 9px; border: 1.5px solid #ddd; border-radius: 6px; font-size: 12px; font-family: inherit; }
+  .task-add input:focus { outline: none; border-color: var(--pink); }
+  .task-add button { padding: 5px 11px; background: var(--pink); color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 600; }
+  .today-marker { background: var(--pink-light); color: var(--pink-dark); font-size: 10px; padding: 2px 6px; border-radius: 4px; font-weight: 700; }
+  .post-badge { border-radius: 6px; padding: 4px 8px; font-size: 11px; font-weight: 600; margin-bottom: 7px; }
+
+  /* INSTAGRAM */
+  .post-card { background: var(--white); border-radius: var(--radius); box-shadow: var(--shadow); padding: 14px; margin-bottom: 10px; display: flex; gap: 14px; align-items: flex-start; }
+  .post-info { flex: 1; }
+  .post-title { font-weight: 600; font-size: 13px; color: var(--text); margin-bottom: 3px; }
+  .post-meta { font-size: 11px; color: var(--gray); display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 8px; }
+  .post-metrics { display: flex; gap: 10px; flex-wrap: wrap; }
+  .metric-pill { background: var(--cream); border: 1px solid #ede8e5; border-radius: 8px; padding: 4px 9px; font-size: 11px; text-align: center; }
+  .metric-pill .metric-val { font-weight: 700; font-size: 14px; color: var(--brown); display: block; }
+  .metric-pill .metric-lbl { font-size: 10px; color: var(--gray); text-transform: uppercase; letter-spacing: .5px; }
+  .post-actions { display: flex; gap: 5px; flex-direction: column; }
+  .wpp-btn { background: #25D366; color: white; border: none; border-radius: 6px; padding: 3px 8px; font-size: 11px; cursor: pointer; font-weight: 600; white-space: nowrap; }
+  .wpp-btn:hover { background: #1ebe5a; }
+
+  /* AGENDA */
+  .appt-card { background: var(--white); border-radius: 10px; box-shadow: var(--shadow); padding: 14px 16px; margin-bottom: 10px; display: flex; gap: 14px; align-items: center; border-left: 4px solid var(--pink); }
+  .appt-card.tipo-gps { border-left-color: var(--orange); }
+  .appt-card.tipo-best { border-left-color: var(--pink); }
+  .appt-card.tipo-consultoria { border-left-color: var(--blue); }
+  .appt-card.tipo-reuniao { border-left-color: var(--purple); }
+  .appt-card.past { opacity: .55; }
+  .appt-time { text-align: center; min-width: 56px; }
+  .appt-time .hora { font-size: 18px; font-weight: 700; color: var(--brown); }
+  .appt-time .data { font-size: 11px; color: var(--gray); }
+  .appt-info { flex: 1; }
+  .appt-titulo { font-weight: 600; font-size: 14px; }
+  .appt-meta { font-size: 12px; color: var(--gray); margin-top: 2px; }
+
+  /* CLIENTES */
+  .cliente-card { background: var(--white); border-radius: var(--radius); box-shadow: var(--shadow); padding: 18px; margin-bottom: 14px; }
+  .cliente-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; }
+  .cliente-nome { font-size: 16px; font-weight: 700; color: var(--brown); }
+  .cliente-valor { font-size: 14px; font-weight: 700; color: var(--green); }
+  .entrega-item { display: flex; align-items: flex-start; gap: 8px; padding: 6px 0; border-bottom: 1px solid var(--gray-light); font-size: 13px; }
+  .entrega-item:last-child { border-bottom: none; }
+  .entrega-item input[type="checkbox"] { margin-top: 2px; accent-color: var(--green); cursor: pointer; flex-shrink: 0; }
+  .entrega-text { flex: 1; line-height: 1.4; }
+  .entrega-text.done { text-decoration: line-through; color: var(--gray); }
+  .entrega-prazo { font-size: 11px; color: var(--gray); white-space: nowrap; }
+
+  /* BLACK FRIDAY */
+  .countdown-block { background: #2d2d2d; color: white; border-radius: var(--radius); padding: 20px; text-align: center; margin-bottom: 16px; }
+  .countdown-title { font-size: 12px; text-transform: uppercase; letter-spacing: 1px; opacity: .7; margin-bottom: 8px; }
+  .countdown-number { font-size: 48px; font-weight: 700; color: var(--pink-light); line-height: 1; }
+  .countdown-sub { font-size: 13px; opacity: .7; margin-top: 6px; }
+  .bf-step { background: var(--white); border-radius: 10px; padding: 14px 16px; margin-bottom: 8px; display: flex; gap: 12px; align-items: flex-start; box-shadow: var(--shadow); }
+  .bf-step-num { width: 28px; height: 28px; border-radius: 50%; background: var(--pink); color: white; font-size: 13px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .bf-step-content { flex: 1; }
+  .bf-step-title { font-weight: 600; font-size: 13px; color: var(--brown); }
+  .bf-step-desc { font-size: 12px; color: var(--gray); margin-top: 2px; line-height: 1.5; }
+
+  /* GANCHOS */
+  .gancho-search { width: 100%; padding: 10px 14px; border: 1.5px solid #ddd; border-radius: 10px; font-size: 13px; font-family: inherit; margin-bottom: 16px; }
+  .gancho-search:focus { outline: none; border-color: var(--pink); }
+  .gancho-item { background: var(--white); border-radius: 10px; padding: 12px 14px; margin-bottom: 8px; box-shadow: var(--shadow); display: flex; gap: 12px; align-items: flex-start; }
+  .gancho-pilar { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; padding: 3px 8px; border-radius: 5px; white-space: nowrap; flex-shrink: 0; margin-top: 1px; }
+  .pilar-educar { background: #dce8f5; color: var(--blue); }
+  .pilar-conectar { background: var(--pink-light); color: var(--pink-dark); }
+  .pilar-converter { background: #d5eedf; color: var(--green); }
+  .pilar-todos { background: #e8dff5; color: var(--purple); }
+  .gancho-text { flex: 1; font-size: 13px; line-height: 1.5; }
+  .gancho-item:hover .copy-btn { opacity: 1; }
+  .gancho-filter { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 14px; }
+  .filter-btn { padding: 5px 13px; border-radius: 20px; border: 1.5px solid #ddd; background: white; cursor: pointer; font-size: 12px; font-weight: 600; color: var(--gray); font-family: inherit; transition: all .15s; }
+  .filter-btn.active { background: var(--pink); color: white; border-color: var(--pink); }
+
+  /* FINANCEIRO TRANSAÇÕES */
+  .trans-item { display:flex; align-items:center; gap:10px; padding:8px 0; border-bottom:1px solid var(--gray-light); font-size:13px; }
+  .trans-item:last-child { border-bottom:none; }
+  .trans-valor { font-weight:700; white-space:nowrap; }
+  .trans-valor.entrada { color:var(--green); }
+  .trans-valor.saida { color:var(--red); }
+
+  /* KOMPRÃO VIDEO TRACKER */
+  .video-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:10px; }
+  .video-col { background:var(--cream); border-radius:8px; padding:10px 12px; }
+  .video-col-title { font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.5px; color:var(--brown); margin-bottom:8px; display:flex; justify-content:space-between; }
+  .video-item { display:flex; align-items:center; gap:7px; padding:4px 0; font-size:12px; }
+  .video-item input[type="checkbox"] { accent-color:var(--green); cursor:pointer; }
+  .video-item.done span { text-decoration:line-through; color:var(--gray); }
+
+  /* AVIAMENTOS STRATEGY */
+  .strategy-select { padding:6px 10px; border:1.5px solid #ddd; border-radius:8px; font-size:13px; font-family:inherit; background:white; }
+  .strategy-select:focus { outline:none; border-color:var(--pink); }
+
+  /* STATUS CALENDAR */
+  .cal-status-btn { cursor:pointer; user-select:none; }
+  .cal-status-btn:hover { opacity:.8; }
+
+  @media (max-width: 900px) {
+    .cards-3, .cards-4 { grid-template-columns: 1fr 1fr; }
+    .days-grid { grid-template-columns: 1fr 1fr; }
+    .form-grid-3 { grid-template-columns: 1fr 1fr; }
+    .video-grid { grid-template-columns:1fr; }
+  }
+
+  /* ============ TELA DE LOGIN ============ */
+  #login-overlay {
+    position: fixed; inset: 0; z-index: 9999;
+    background: var(--cream);
+    display: flex; align-items: center; justify-content: center;
+  }
+  #login-overlay.hidden { display: none; }
+  .login-box {
+    background: var(--white); border-radius: 20px;
+    padding: 48px 40px; width: 360px; max-width: 90vw;
+    box-shadow: 0 8px 40px rgba(106,76,60,.13);
+    text-align: center;
+  }
+  .login-logo { font-size: 36px; margin-bottom: 6px; }
+  .login-title { font-size: 22px; font-weight: 700; color: var(--brown); margin-bottom: 4px; }
+  .login-sub { font-size: 13px; color: var(--gray); margin-bottom: 28px; }
+  .login-input {
+    width: 100%; padding: 12px 16px; border: 2px solid #e0d9ce;
+    border-radius: 10px; font-size: 15px; color: var(--brown);
+    background: var(--cream); outline: none; box-sizing: border-box;
+    transition: border-color .2s;
+  }
+  .login-input:focus { border-color: var(--brown); }
+  .login-btn {
+    width: 100%; margin-top: 14px; padding: 13px;
+    background: var(--brown); color: #fff; border: none;
+    border-radius: 10px; font-size: 15px; font-weight: 600;
+    cursor: pointer; transition: opacity .2s;
+  }
+  .login-btn:hover { opacity: .88; }
+  .login-error { color: #c0392b; font-size: 13px; margin-top: 10px; min-height: 18px; }
+</style>
+</head>
+<body>
+
+<!-- ============ LOGIN OVERLAY ============ -->
+<div id="login-overlay">
+  <div class="login-box">
+    <div class="login-logo">🎀</div>
+    <div class="login-title">EA Studio</div>
+    <div class="login-sub">Escritório Virtual · Emillyn Amorim</div>
+    <input class="login-input" type="password" id="login-pwd" placeholder="Senha de acesso"
+      onkeydown="if(event.key==='Enter')checkLogin()">
+    <button class="login-btn" onclick="checkLogin()">Entrar</button>
+    <div class="login-error" id="login-error"></div>
+  </div>
+</div>
+
+<nav class="sidebar">
+  <div class="sidebar-logo">
+    <h1>🎀 EA Studio</h1>
+    <p>Escritório Virtual</p>
+  </div>
+  <div class="nav">
+    <a class="nav-item active" onclick="showPage('overview',this)"><span class="nav-icon">🏠</span> Visão Geral</a>
+    <a class="nav-item" onclick="showPage('crm',this)"><span class="nav-icon">👥</span> CRM / Leads</a>
+    <a class="nav-item" onclick="showPage('financeiro',this)"><span class="nav-icon">💰</span> Financeiro</a>
+    <div class="nav-divider"></div>
+    <a class="nav-item" onclick="showPage('agenda',this)"><span class="nav-icon">📆</span> Agenda</a>
+    <a class="nav-item" onclick="showPage('clientes',this)"><span class="nav-icon">🏢</span> Clientes</a>
+    <a class="nav-item" onclick="showPage('instagram',this)"><span class="nav-icon">📱</span> Instagram</a>
+    <a class="nav-item" onclick="showPage('stories',this)"><span class="nav-icon">📖</span> Stories</a>
+    <a class="nav-item" onclick="showPage('tarefas',this)"><span class="nav-icon">📝</span> Tarefas</a>
+    <div class="nav-divider"></div>
+    <a class="nav-item" onclick="showPage('blackfriday',this)"><span class="nav-icon">🖤</span> Black Friday</a>
+    <a class="nav-item" onclick="showPage('ganchos',this)"><span class="nav-icon">🎣</span> Ganchos</a>
+    <div class="nav-divider"></div>
+    <a class="nav-item" onclick="showPage('marca',this)"><span class="nav-icon">🎨</span> Marca</a>
+    <a class="nav-item" onclick="showPage('conteudo',this)"><span class="nav-icon">📅</span> Conteúdo</a>
+    <a class="nav-item" onclick="showPage('processos',this)"><span class="nav-icon">📋</span> Processos</a>
+  </div>
+  <div class="sidebar-footer">
+    <div class="sidebar-sync">
+      <span class="sync-status" id="sync-status-label">☁️ Sem sincronização</span>
+      <button class="btn-sync" id="btn-sync-save" onclick="syncToGist()" title="Salvar na nuvem">💾 Salvar</button>
+    </div>
+    <div style="display:flex;align-items:center;justify-content:space-between">
+      <span>Emillyn Amorim · Out/2026</span>
+      <button class="btn-sync" onclick="openModal('modal-sync')" style="font-size:10px;padding:3px 8px">⚙️ Nuvem</button>
+    </div>
+  </div>
+</nav>
+
+<main class="main">
+
+<!-- VISÃO GERAL -->
+<div id="page-overview" class="page active">
+  <div class="page-header"><div class="page-header-left"><h2>🏠 Visão Geral</h2><p>Snapshot do negócio — outubro 2026</p></div></div>
+  <div class="cards cards-4">
+    <div class="card card-accent"><div class="card-label">Receita projetada out/26</div><div class="card-value">R$4.317</div><div class="card-sub">R$3.081 recebido · R$1.236 a entrar</div><div class="progress-bar" style="margin-top:8px"><div class="progress-fill" style="width:71.9%"></div></div></div>
+    <div class="card card-green"><div class="card-label">Gap para a meta</div><div class="card-value">R$1.683</div><div class="card-sub">2 GPS + 9 Bests = R$6.003</div></div>
+    <div class="card card-yellow"><div class="card-label">Total de leads</div><div class="card-value" id="ov-leads">—</div><div class="card-sub">Meta: 50 até 23/10</div></div>
+    <div class="card card-blue"><div class="card-label">Fechamentos</div><div class="card-value" id="ov-fechamentos">—</div><div class="card-sub">GPS + BEST no CRM</div></div>
+  </div>
+  <div class="section"><div class="section-title"><span>📊 Tracker de Outubro</span></div>
+    <div id="tracker-loading" class="loading"><span class="spinner"></span>Carregando tracker…</div>
+    <table id="tracker-table" style="display:none"><thead><tr><th>Objetivo</th><th>Realizado</th><th>Meta</th><th>Progresso</th><th>Faltam</th><th>Recompensa</th></tr></thead><tbody id="tracker-body"></tbody></table>
+  </div>
+  <div class="section"><div class="section-title"><span>💼 Receita por fonte</span></div>
+    <table><thead><tr><th>Serviço</th><th>Valor/mês</th><th>Status</th></tr></thead><tbody>
+      <tr><td>Komprão — contrato anual</td><td>R$1.833</td><td><span class="badge badge-green">Ativo</span></td></tr>
+      <tr><td>Mentoria individual (1 aluna)</td><td>R$550</td><td><span class="badge badge-yellow">Encerramento programado</span></td></tr>
+      <tr><td>Aviamentos Contes — stories</td><td>R$600</td><td><span class="badge badge-green">Ativo</span></td></tr>
+      <tr><td>Panificadora Kelly — publi</td><td>R$500</td><td><span class="badge badge-green">Ativo</span></td></tr>
+      <tr><td>BEST Criadora (4 inscritas)</td><td>R$351,60</td><td><span class="badge badge-pink">Crescendo</span></td></tr>
+    </tbody></table>
+  </div>
+</div>
+
+<!-- CRM -->
+<div id="page-crm" class="page">
+  <div class="page-header">
+    <div class="page-header-left"><h2>👥 CRM — Pipeline de Leads</h2><p>Leads e disparos de WhatsApp</p></div>
+    <button class="btn btn-primary btn-sm" onclick="openAddLead()">+ Novo lead</button>
+  </div>
+  <div class="tab-bar">
+    <button class="tab-btn active" onclick="switchTab('crm','lista',this)">Lista</button>
+    <button class="tab-btn" onclick="switchTab('crm','kanban',this)">Kanban</button>
+  </div>
+  <div id="crm-lista" class="tab-content active">
+    <table id="crm-table"><thead><tr><th>Nome</th><th>Canal</th><th>Interesse</th><th>Estágio</th><th>Data</th><th>Valor</th><th>WPP</th><th></th></tr></thead><tbody id="crm-body"></tbody></table>
+  </div>
+  <div id="crm-kanban" class="tab-content"><div class="kanban" id="kanban-board"></div></div>
+</div>
+
+<!-- FINANCEIRO -->
+<div id="page-financeiro" class="page">
+  <div class="page-header">
+    <div class="page-header-left"><h2>💰 Financeiro</h2><p>Receita real de outubro 2026</p></div>
+    <button class="btn btn-primary btn-sm" onclick="openAddTransacao()">+ Lançamento</button>
+  </div>
+  <div class="cards cards-4">
+    <div class="card card-accent"><div class="card-label">Já entrou</div><div class="card-value" id="fin-entrou">R$3.081</div><div class="card-sub" id="fin-entrou-sub">14/10/2026</div><div class="progress-bar" style="margin-top:8px"><div class="progress-fill" id="fin-bar-entrou" style="width:51.4%"></div></div></div>
+    <div class="card card-yellow"><div class="card-label">Ainda entra</div><div class="card-value" id="fin-pendente">R$1.236</div><div class="card-sub">Pendente</div></div>
+    <div class="card card-green"><div class="card-label">Total projetado</div><div class="card-value" id="fin-projetado">R$4.317</div><div class="card-sub" id="fin-projetado-sub">71,9% da meta de R$6.000</div><div class="progress-bar" style="margin-top:8px"><div class="progress-fill green" id="fin-bar-proj" style="width:71.9%"></div></div></div>
+    <div class="card card-blue"><div class="card-label">Gap para R$6k</div><div class="card-value" id="fin-gap">R$1.683</div><div class="card-sub">GPS ou novas Bests</div></div>
+  </div>
+
+  <div class="cards cards-2">
+    <div class="section">
+      <div class="section-title"><span>✅ Já entrou em outubro</span></div>
+      <table><thead><tr><th>Fonte</th><th>Valor</th><th>Data</th></tr></thead><tbody>
+        <tr><td>Komprão</td><td style="font-weight:600">R$1.833,34</td><td style="font-size:11px;color:var(--gray)">08/10</td></tr>
+        <tr><td>Aviamentos Contes</td><td style="font-weight:600">R$600,00</td><td style="font-size:11px;color:var(--gray)">14/10</td></tr>
+        <tr><td>Publi Panda</td><td style="font-weight:600">R$550,00</td><td style="font-size:11px;color:var(--gray)">14/10</td></tr>
+        <tr><td>BEST — Bruna</td><td style="font-weight:600">R$97,90</td><td style="font-size:11px;color:var(--gray)">11/10</td></tr>
+        <tr style="background:var(--cream)"><td><strong>Total recebido</strong></td><td><strong>R$3.081,24</strong></td><td></td></tr>
+      </tbody></table>
+    </div>
+    <div class="section">
+      <div class="section-title"><span>⏳ Ainda vai entrar</span></div>
+      <table><thead><tr><th>Fonte</th><th>Valor</th><th>Previsão</th></tr></thead><tbody>
+        <tr><td>BEST — Paula</td><td style="font-weight:600">R$87,90</td><td style="font-size:11px;color:var(--gray)">15/10</td></tr>
+        <tr><td>BEST — Ana Karolina</td><td style="font-weight:600">R$97,90</td><td style="font-size:11px;color:var(--orange)">⚠️ 11/10 — verificar</td></tr>
+        <tr><td>Andressa — Mentoria</td><td style="font-weight:600">R$550,00</td><td style="font-size:11px;color:var(--gray)">25/10</td></tr>
+        <tr><td>Panificadora Kelly</td><td style="font-weight:600">R$500,00</td><td style="font-size:11px;color:var(--gray)">29/10</td></tr>
+        <tr style="background:var(--cream)"><td><strong>Total pendente</strong></td><td><strong>R$1.235,80</strong></td><td></td></tr>
+      </tbody></table>
+    </div>
+  </div>
+
+  <div class="section"><div class="section-title"><span>📋 Todas as movimentações</span><button class="btn btn-ghost btn-sm" onclick="openAddTransacao()">+ Lançamento</button></div>
+    <div id="transacoes-list"><div class="loading">Carregando…</div></div>
+  </div>
+
+  <div class="cards cards-2">
+    <div class="section"><div class="section-title"><span>📈 Como fechar os R$6k</span></div>
+      <div class="prose"><p>Gap após outubro projetado: <strong>R$1.682,96</strong></p><p>✅ 2 GPS vendidos × R$447,90 = <strong>+R$895,80</strong></p><p>✅ 9 novas Bests × R$87,90 = <strong>+R$791,10</strong></p><p><strong>Total: +R$1.686,90 → R$6.003/mês ✓</strong></p></div>
+    </div>
+    <div class="section"><div class="section-title"><span>🎯 Metas de longo prazo</span></div>
+      <div class="prose"><p>📍 <strong>Dez/2026:</strong> R$6.000/mês</p><div class="progress-bar"><div class="progress-fill" style="width:71.9%"></div></div><p style="margin-top:10px">📍 <strong>Mai/2027:</strong> R$15–20k/mês</p><div class="progress-bar"><div class="progress-fill" style="width:21.6%"></div></div></div>
+    </div>
+  </div>
+
+  <div class="section"><div class="section-title"><span>🗓 Recompensas de outubro</span></div>
+    <table><thead><tr><th>Marco</th><th>Recompensa</th></tr></thead><tbody>
+      <tr><td>46 posts publicados</td><td>🖼 Novos quadros para pintar</td></tr>
+      <tr><td>50 leads no grupo gratuito</td><td>🌳 Parque Caieiras</td></tr>
+      <tr><td>1ª venda do GPS</td><td>🍣 Sushi</td></tr>
+      <tr><td>10 Bests novas</td><td>💅 Kit de unhas da Shopee</td></tr>
+    </tbody></table>
+  </div>
+</div>
+
+<!-- AGENDA -->
+<div id="page-agenda" class="page">
+  <div class="page-header">
+    <div class="page-header-left"><h2>📆 Agenda</h2><p>Consultorias, reuniões e encontros BEST</p></div>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-ghost btn-sm" onclick="openAddRecurring()">↻ Recorrente</button>
+      <button class="btn btn-primary btn-sm" onclick="openAddAppt()">+ Agendar</button>
+    </div>
+  </div>
+  <div class="tab-bar">
+    <button class="tab-btn active" onclick="switchTab('agenda','proximos',this)">Próximos</button>
+    <button class="tab-btn" onclick="switchTab('agenda','todos',this)">Todos</button>
+    <button class="tab-btn" onclick="switchTab('agenda','recorrentes',this)">↻ Recorrentes</button>
+  </div>
+  <div id="agenda-proximos" class="tab-content active"><div id="agenda-list-proximos"></div></div>
+  <div id="agenda-todos" class="tab-content"><div id="agenda-list-todos"></div></div>
+  <div id="agenda-recorrentes" class="tab-content"><div id="agenda-list-recorrentes"></div></div>
+</div>
+
+<!-- CLIENTES ATIVOS -->
+<div id="page-clientes" class="page">
+  <div class="page-header">
+    <div class="page-header-left"><h2>🏢 Clientes Ativos</h2><p>Entregas pendentes e acompanhamento</p></div>
+    <button class="btn btn-primary btn-sm" onclick="openAddCliente()">+ Novo cliente</button>
+  </div>
+  <div id="clientes-container"></div>
+</div>
+
+<!-- INSTAGRAM -->
+<div id="page-instagram" class="page">
+  <div class="page-header">
+    <div class="page-header-left"><h2>📱 Instagram</h2><p>Calendário de posts e insights de desempenho</p></div>
+    <button class="btn btn-primary btn-sm" onclick="openAddPost()">+ Registrar post</button>
+  </div>
+  <div class="cards cards-4">
+    <div class="card card-accent"><div class="card-label">Posts publicados</div><div class="card-value" id="ig-pub-count">—</div><div class="card-sub">Este mês</div></div>
+    <div class="card card-blue"><div class="card-label">Alcance médio</div><div class="card-value" id="ig-avg-reach">—</div><div class="card-sub">Por post</div></div>
+    <div class="card card-green"><div class="card-label">Salvamentos</div><div class="card-value" id="ig-total-saves">—</div><div class="card-sub">Total do mês</div></div>
+    <div class="card card-yellow"><div class="card-label">Agendados</div><div class="card-value" id="ig-sched-count">—</div><div class="card-sub">Próximos dias</div></div>
+  </div>
+  <div class="section"><div class="section-title"><span>📊 Relatório mensal (PDF)</span></div>
+    <div id="ig-pdf-section">
+      <p style="font-size:13px;color:var(--gray);margin-bottom:12px">No final do mês, suba aqui os prints das métricas. O relatório fica salvo para consulta.</p>
+      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+        <label class="btn btn-ghost btn-sm" style="cursor:pointer">📎 Adicionar PDF <input type="file" accept=".pdf,image/*" multiple style="display:none" onchange="handleIgPdfUpload(this)"></label>
+        <span id="ig-pdf-status" style="font-size:12px;color:var(--gray)"></span>
+      </div>
+      <div id="ig-pdf-list" style="margin-top:12px"></div>
+    </div>
+  </div>
+  <div class="section"><div class="section-title"><span>📅 Posts do mês</span></div><div id="posts-list"></div></div>
+</div>
+
+<!-- STORIES PLANNER -->
+<div id="page-stories" class="page">
+  <div class="page-header">
+    <div class="page-header-left"><h2>📖 Stories</h2><p>Planejamento semanal de stories — Seg a Sab</p></div>
+    <div style="display:flex;gap:6px;align-items:center">
+      <button class="btn btn-ghost btn-sm" onclick="prevWeek('stories')">← Semana</button>
+      <span id="stories-week-label" style="font-size:12px;color:var(--brown);font-weight:600"></span>
+      <button class="btn btn-ghost btn-sm" onclick="nextWeek('stories')">Semana →</button>
+    </div>
+  </div>
+  <div class="section" style="padding:14px 18px;margin-bottom:14px">
+    <div class="section-title"><span>🧱 Estrutura validada de stories</span></div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <span class="badge badge-pink">1. Gancho (1 story)</span>
+      <span class="badge badge-blue">2. Problema ou contexto (1–2)</span>
+      <span class="badge badge-yellow">3. Conteúdo ou bastidor (2–3)</span>
+      <span class="badge badge-green">4. Prova ou resultado (1)</span>
+      <span class="badge badge-orange">5. CTA claro (1)</span>
+    </div>
+  </div>
+  <div class="days-grid" id="stories-grid"></div>
+</div>
+
+<!-- TAREFAS -->
+<div id="page-tarefas" class="page">
+  <div class="page-header">
+    <div class="page-header-left"><h2>📝 Tarefas</h2><p>Planejamento diário — Seg a Sab</p></div>
+    <div style="display:flex;gap:6px;align-items:center">
+      <button class="btn btn-ghost btn-sm" onclick="prevWeek('tasks')">← Semana</button>
+      <span id="tasks-week-label" style="font-size:12px;color:var(--brown);font-weight:600"></span>
+      <button class="btn btn-ghost btn-sm" onclick="nextWeek('tasks')">Semana →</button>
+    </div>
+  </div>
+  <div class="days-grid" id="tasks-grid"></div>
+</div>
+
+<!-- BLACK FRIDAY -->
+<div id="page-blackfriday" class="page">
+  <div class="page-header"><div class="page-header-left"><h2>🖤 Black Friday — BEST Criadora</h2><p>Campanha começa 23/10 · Prazo: 05/11</p></div></div>
+  <div id="bf-countdown" class="countdown-block"></div>
+  <div class="cards cards-3">
+    <div class="card card-accent"><div class="card-label">Meta de vendas</div><div class="card-value">+11 Bests</div><div class="card-sub">De 4 para 15 inscritas</div></div>
+    <div class="card card-green"><div class="card-label">Receita esperada</div><div class="card-value">+R$966</div><div class="card-sub">11 × R$87,90/mês</div></div>
+    <div class="card card-dark" style="border-left:4px solid #2d2d2d"><div class="card-label">Oferta Black Friday</div><div class="card-value" style="font-size:16px">🖤 A definir</div><div class="card-sub">Desconto ou bônus extra?</div></div>
+  </div>
+  <div class="cards cards-2">
+    <div class="section"><div class="section-title"><span>📅 Sequência de conteúdo</span></div>
+      <div id="bf-steps"></div>
+    </div>
+    <div class="section"><div class="section-title"><span>✅ Checklist da campanha</span></div>
+      <div id="bf-checklist"></div>
+    </div>
+  </div>
+  <div class="section"><div class="section-title"><span>📝 Notas da campanha</span></div>
+    <textarea id="bf-notes" style="width:100%;min-height:100px;border:1.5px solid #ddd;border-radius:8px;padding:10px;font-family:inherit;font-size:13px;resize:vertical" placeholder="Ideias, ajustes, observações sobre a campanha..." oninput="saveBfNotes()"></textarea>
+  </div>
+</div>
+
+<!-- GANCHOS -->
+<div id="page-ganchos" class="page">
+  <div class="page-header">
+    <div class="page-header-left"><h2>🎣 Banco de Ganchos</h2><p>Biblioteca de ganchos por pilar — clique para copiar</p></div>
+    <button class="btn btn-primary btn-sm" onclick="openAddGancho()">+ Adicionar</button>
+  </div>
+  <input class="gancho-search" id="gancho-search" placeholder="🔍 Buscar gancho..." oninput="renderGanchos()">
+  <div class="gancho-filter" id="gancho-filter">
+    <button class="filter-btn active" data-pilar="todos" onclick="setGanchoFilter('todos',this)">Todos</button>
+    <button class="filter-btn" data-pilar="Educar" onclick="setGanchoFilter('Educar',this)">📚 Educar</button>
+    <button class="filter-btn" data-pilar="Conectar" onclick="setGanchoFilter('Conectar',this)">💛 Conectar</button>
+    <button class="filter-btn" data-pilar="Converter" onclick="setGanchoFilter('Converter',this)">🎯 Converter</button>
+  </div>
+  <div id="ganchos-list"></div>
+</div>
+
+<!-- MARCA -->
+<div id="page-marca" class="page">
+  <div class="page-header"><div class="page-header-left"><h2>🎨 Marca & Identidade</h2><p>Posicionamento, tom de voz e serviços</p></div></div>
+  <div class="cards cards-2">
+    <div class="section"><div class="section-title"><span>✨ Quem é Emillyn</span></div>
+      <div class="prose"><p><strong>@emillyn.amorim</strong> · 25.462 seguidores · Joinville, SC</p><p>Estrategista de conteúdo e Instagram — faz o Instagram de empreendedoras crescer e vender com conteúdo, estratégia e estrutura.</p><h4>Bio confirmada (Out/2026)</h4><p><em>"Aqui eu te ensino a criar conteúdo pra ser ESCOLHIDA<br>⭐️ Mãe de 2 e empreendedora<br>(porque dá sim pra ser as duas)<br>👇🏻 Comunidade Best Criadora"</em></p></div>
+    </div>
+    <div class="section"><div class="section-title"><span>💬 Tom de voz</span></div>
+      <div class="prose"><p><strong>Essência:</strong> A amiga que diz a verdade antes que você cometa o erro — e ainda ri contigo depois.</p><h4>Sempre</h4><p>Direta · Amiga · Provocativa com afeto · Humor ácido · Honesta · Sem guru</p><h4>Nunca</h4><p>Motivação gritada · Hype vazio · "Potencializar" · "Alavancar" · "Elevar"</p><h4>Pronomes</h4><p>✅ teu/tua · ❌ seu/sua</p></div>
+    </div>
+  </div>
+  <div class="section"><div class="section-title"><span>🛍 Serviços & Preços</span></div>
+    <table><thead><tr><th>Serviço</th><th>Valor</th><th>CTA</th><th>Status</th></tr></thead><tbody>
+      <tr><td>GPS do Perfil</td><td>R$447,90</td><td>Comenta GPS 👇🏻</td><td><span class="badge badge-orange">Foco Out/2026</span></td></tr>
+      <tr><td>BEST Criadora</td><td>R$87,90/mês</td><td>Link na bio 🎀</td><td><span class="badge badge-pink">Ativo · 4 inscritas</span></td></tr>
+      <tr><td>Consultoria Express</td><td>Gratuita</td><td>ManyChat → WPP</td><td><span class="badge badge-blue">Temporário</span></td></tr>
+      <tr><td>Isca Roube as Ideias</td><td>Grátis</td><td>Comenta IDEIAS 👇🏻</td><td><span class="badge badge-green">Ativo</span></td></tr>
+    </tbody></table>
+  </div>
+</div>
+
+<!-- CONTEÚDO -->
+<div id="page-conteudo" class="page">
+  <div class="page-header"><div class="page-header-left"><h2>📅 Conteúdo</h2><p>Séries, padrões e calendário editorial</p></div></div>
+
+  <!-- CALENDÁRIO DE POSTS -->
+  <div class="section"><div class="section-title"><span>🗓 Calendário de posts — 20 a 31/out</span><span style="font-size:11px;color:var(--gray);font-weight:400">Clique no status para alterar</span></div>
+    <div id="calendario-container"></div>
+  </div>
+
+  <div class="section"><div class="section-title"><span>📆 Foco semanal outubro</span></div>
+    <table><thead><tr><th>Semana</th><th>Período</th><th>Foco</th><th>CTA</th></tr></thead><tbody>
+      <tr><td>Semana 1</td><td>09–15/10</td><td>GPS do Perfil + Encher grupo</td><td><span class="badge badge-orange">Comenta GPS</span></td></tr>
+      <tr><td>Semana 2</td><td>16–22/10</td><td>GPS do Perfil + Encher grupo</td><td><span class="badge badge-orange">Comenta GPS</span></td></tr>
+      <tr><td>Semana 3</td><td>23–29/10</td><td>BEST Criadora — Black Friday</td><td><span class="badge badge-pink">Link na bio 🎀</span></td></tr>
+      <tr><td>Semana 4</td><td>30/10–05/11</td><td>BEST Criadora — Black Friday</td><td><span class="badge badge-pink">Link na bio 🎀</span></td></tr>
+    </tbody></table>
+  </div>
+  <div class="cards cards-3">
+    <div class="section"><div class="section-title"><span>🎬 Série 2 — Phil's-osophy</span></div><div class="prose"><p><strong>"Se o Instagram do [personagem] fosse meu"</strong></p><p>Personagens de série como analogia de estratégia. CTA: "Comenta GPS".</p><p><span class="badge badge-green">✅ Primeiro publicado 14/10</span></p></div></div>
+    <div class="section"><div class="section-title"><span>📺 Série 1 — Roube as Ideias</span></div><div class="prose"><p><strong>"Roube as minhas ideias de conteúdo para [nicho]"</strong></p><p>Cada episódio = 1 nicho diferente. Conecta com a isca do site.</p><p><span class="badge badge-yellow">🟡 Em produção</span></p></div></div>
+    <div class="section"><div class="section-title"><span>✨ Série 3 — GPS ao vivo</span></div><div class="prose"><p><strong>"O que eu mudaria nesse perfil se fosse meu"</strong></p><p>Análise de perfil de seguidora. CTA: "Comenta GPS".</p><p><span class="badge badge-yellow">🟡 Em produção</span></p></div></div>
+  </div>
+  <div class="section"><div class="section-title"><span>🎯 Os 6 padrões fixos</span></div>
+    <table><thead><tr><th>Padrão</th><th>Objetivo</th><th>CTA</th></tr></thead><tbody>
+      <tr><td><strong>Roube minhas Ideias</strong></td><td>Isca — captar leads</td><td>Comenta IDEIAS</td></tr>
+      <tr><td><strong>Se o Instagram fosse meu</strong></td><td>Autoridade + conversão GPS</td><td>Comenta GPS</td></tr>
+      <tr><td><strong>O que mudaria nesse perfil</strong></td><td>GPS ao vivo</td><td>Comenta GPS</td></tr>
+      <tr><td><strong>Conectar</strong></td><td>Humanização — vida real</td><td>Salva e manda pra aquela amiga</td></tr>
+      <tr><td><strong>Educar</strong></td><td>Autoridade — passo a passo</td><td>Salva esse post ✨</td></tr>
+      <tr><td><strong>Converter</strong></td><td>Prova social — caso real de aluna</td><td>O próximo caso real pode ser o teu</td></tr>
+    </tbody></table>
+  </div>
+</div>
+
+<!-- PROCESSOS -->
+<div id="page-processos" class="page">
+  <div class="page-header"><div class="page-header-left"><h2>📋 Processos</h2><p>Roteiros de DM prontos para copiar</p></div></div>
+  <div class="section"><div class="section-title"><span>🤖 ManyChat — GPS ("Comenta GPS")</span></div>
+    <div class="msg-box"><div class="msg-label">Mensagem 1</div>Oii! 🖤 Que bom que se interessou! O GPS do Perfil é uma análise completa do seu Instagram — bio, feed, reels, stories e legenda. A gente sai da reunião com um plano de ação real e calendário de conteúdo pro seu perfil crescer e vender, pra você ser ESCOLHIDA! E tem meu suporte pra te ajudar no processo do plano de ação 💜<br><em style="color:var(--gray)">[Botão: Adorei!]</em><button class="copy-btn msg-copy" onclick="copyText(this,'Oii! 🖤 Que bom que se interessou! O GPS do Perfil é uma análise completa do seu Instagram — bio, feed, reels, stories e legenda. A gente sai da reunião com um plano de ação real e calendário de conteúdo pro seu perfil crescer e vender, pra você ser ESCOLHIDA! E tem meu suporte pra te ajudar no processo do plano de ação 💜')">📋 Copiar</button></div>
+    <div class="msg-box"><div class="msg-label">Mensagem 2</div>Perfeito, já vou dar uma espiadinha no seu perfil 👀 O investimento é R$447,90 e as vagas são limitadas. Quer saber se ainda tenho datas disponíveis para você? 😄<br><em style="color:var(--gray)">[Botão: Eu queroo → link WPP]</em><button class="copy-btn msg-copy" onclick="copyText(this,'Perfeito, já vou dar uma espiadinha no seu perfil 👀 O investimento é R$447,90 e as vagas são limitadas. Quer saber se ainda tenho datas disponíveis para você? 😄')">📋 Copiar</button></div>
+  </div>
+  <div class="section"><div class="section-title"><span>🤖 ManyChat — Seguidora nova (Consultoria Express)</span></div>
+    <div class="msg-box"><div class="msg-label">Mensagem 1</div>Ei, {{primeiro_nome}}! Que bom ter você por aqui 🤍 Estou selecionando algumas seguidoras para uma consultoria express gratuita — analiso seu perfil e te dou um diagnóstico rápido do que tá travando seu crescimento. São poucas vagas e escolho a dedo. Quer participar?<br><em style="color:var(--gray)">[Botão: EU QUERO]</em><button class="copy-btn msg-copy" onclick="copyText(this,'Ei, {{primeiro_nome}}! Que bom ter você por aqui 🤍 Estou selecionando algumas seguidoras para uma consultoria express gratuita — analiso seu perfil e te dou um diagnóstico rápido do que tá travando seu crescimento. São poucas vagas e escolho a dedo. Quer participar?')">📋 Copiar</button></div>
+    <div class="msg-box"><div class="msg-label">Mensagem 2</div>Perfeito! 🎀 Me chama aqui no WhatsApp pra eu te colocar na lista — as vagas são limitadas e já tem gente na fila!<br><em style="color:var(--gray)">[Botão: FALAR COM A EMILLYN → WPP]</em><button class="copy-btn msg-copy" onclick="copyText(this,'Perfeito! 🎀 Me chama aqui no WhatsApp pra eu te colocar na lista — as vagas são limitadas e já tem gente na fila!')">📋 Copiar</button></div>
+  </div>
+  <div class="section"><div class="section-title"><span>✅ Checklist antes de publicar</span></div>
+    <div class="prose"><ul><li>Tem âncora pessoal (história ou situação real)?</li><li>O gancho cria tensão nos primeiros 3 segundos?</li><li>O CTA é específico — comenta GPS / BEST / link na bio?</li><li>Tem pelo menos 1 dado ou referência de autoridade?</li><li>Está alinhado com o foco da semana?</li><li>Maternidade aparece como contexto — nunca tema central?</li></ul></div>
+  </div>
+</div>
+
+</main>
+
+<!-- MODAIS -->
+<div class="modal-overlay" id="modal-add-lead">
+  <div class="modal">
+    <div class="modal-header"><h3>➕ Novo Lead</h3><button class="modal-close" onclick="closeModal('modal-add-lead')">✕</button></div>
+    <div class="form-grid">
+      <div class="form-grid form-grid-2">
+        <div class="form-group"><label>Nome *</label><input type="text" id="lead-nome" placeholder="Nome ou @instagram"></div>
+        <div class="form-group"><label>Telefone (WPP)</label><input type="text" id="lead-telefone" placeholder="47999999999 (sem +55)"></div>
+      </div>
+      <div class="form-grid form-grid-2">
+        <div class="form-group"><label>Canal</label><select id="lead-canal"><option>Instagram</option><option>WhatsApp</option><option>Formulário</option><option>Grupo gratuito</option><option>Indicação</option><option>ManyChat</option></select></div>
+        <div class="form-group"><label>Interesse</label><select id="lead-interesse"><option>GPS do Perfil</option><option>BEST Criadora</option><option>Consultoria Express</option><option>Mentoria</option><option>Outro</option></select></div>
+      </div>
+      <div class="form-grid form-grid-2">
+        <div class="form-group"><label>Estágio</label><select id="lead-estagio"><option>Lead frio</option><option>Conversa iniciada</option><option>Proposta enviada</option><option>Fechado</option><option>Perdido</option></select></div>
+        <div class="form-group"><label>Última conversa</label><input type="date" id="lead-data"></div>
+      </div>
+      <div class="form-group"><label>Valor (R$)</label><input type="number" id="lead-valor" placeholder="ex: 447.90"></div>
+      <div class="form-group"><label>Observações</label><textarea id="lead-obs"></textarea></div>
+      <div style="display:flex;gap:8px;justify-content:flex-end">
+        <button class="btn btn-ghost" onclick="closeModal('modal-add-lead')">Cancelar</button>
+        <button class="btn btn-primary" id="btn-salvar-lead" onclick="saveLead()">Salvar lead</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-view-lead">
+  <div class="modal">
+    <div class="modal-header"><h3 id="view-lead-title">Lead</h3><button class="modal-close" onclick="closeModal('modal-view-lead')">✕</button></div>
+    <div id="view-lead-content"></div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-add-post">
+  <div class="modal">
+    <div class="modal-header"><h3 id="post-modal-title">📸 Registrar Post</h3><button class="modal-close" onclick="closeModal('modal-add-post')">✕</button></div>
+    <div class="form-grid">
+      <div class="form-group"><label>Título / tema *</label><input type="text" id="post-titulo" placeholder="ex: Se o Instagram do Phil Dunphy fosse meu"></div>
+      <div class="form-grid form-grid-2">
+        <div class="form-group"><label>Data</label><input type="date" id="post-data"></div>
+        <div class="form-group"><label>Status</label><select id="post-status"><option value="publicado">✅ Publicado</option><option value="agendado">📅 Agendado</option><option value="rascunho">📝 Rascunho</option></select></div>
+      </div>
+      <div class="form-grid form-grid-2">
+        <div class="form-group"><label>Tipo</label><select id="post-tipo"><option>Carrossel</option><option>Reel</option><option>Story</option><option>Post estático</option></select></div>
+        <div class="form-group"><label>Série / Padrão</label><select id="post-serie"><option>Série 2 — Se o Instagram fosse meu</option><option>Série 3 — O que mudaria nesse perfil</option><option>Série 1 — Roube minhas Ideias</option><option>Padrão: Conectar</option><option>Padrão: Educar</option><option>Padrão: Converter</option><option>Outro</option></select></div>
+      </div>
+      <div style="font-size:12px;font-weight:600;color:var(--brown)">Insights</div>
+      <div class="form-grid form-grid-3">
+        <div class="form-group"><label>Alcance</label><input type="number" id="post-alcance" placeholder="0"></div>
+        <div class="form-group"><label>Curtidas</label><input type="number" id="post-curtidas" placeholder="0"></div>
+        <div class="form-group"><label>Salvamentos</label><input type="number" id="post-salvamentos" placeholder="0"></div>
+        <div class="form-group"><label>Comentários</label><input type="number" id="post-comentarios" placeholder="0"></div>
+        <div class="form-group"><label>Compartilhamentos</label><input type="number" id="post-compartilhamentos" placeholder="0"></div>
+        <div class="form-group"><label>Cliques</label><input type="number" id="post-cliques" placeholder="0"></div>
+      </div>
+      <div class="form-group"><label>Observações</label><textarea id="post-obs" placeholder="O que funcionou, aprendizado..."></textarea></div>
+      <div style="display:flex;gap:8px;justify-content:flex-end">
+        <button class="btn btn-ghost" onclick="closeModal('modal-add-post')">Cancelar</button>
+        <button class="btn btn-primary" onclick="savePost()">Salvar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-add-appt">
+  <div class="modal">
+    <div class="modal-header"><h3>📆 Novo Agendamento</h3><button class="modal-close" onclick="closeModal('modal-add-appt')">✕</button></div>
+    <div class="form-grid">
+      <div class="form-group"><label>Título *</label><input type="text" id="appt-titulo" placeholder="ex: GPS do Perfil — @fulana"></div>
+      <div class="form-grid form-grid-2">
+        <div class="form-group"><label>Data *</label><input type="date" id="appt-data"></div>
+        <div class="form-group"><label>Hora *</label><input type="time" id="appt-hora"></div>
+      </div>
+      <div class="form-grid form-grid-2">
+        <div class="form-group"><label>Tipo</label><select id="appt-tipo"><option value="gps">GPS do Perfil</option><option value="best">BEST Criadora</option><option value="consultoria">Consultoria Express</option><option value="reuniao">Reunião</option><option value="outro">Outro</option></select></div>
+        <div class="form-group"><label>Cliente / Aluna</label><input type="text" id="appt-cliente" placeholder="Nome ou @"></div>
+      </div>
+      <div class="form-group"><label>Observações</label><textarea id="appt-obs" placeholder="Link da call, contexto..."></textarea></div>
+      <div style="display:flex;gap:8px;justify-content:flex-end">
+        <button class="btn btn-ghost" onclick="closeModal('modal-add-appt')">Cancelar</button>
+        <button class="btn btn-primary" onclick="saveAppt()">Salvar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-add-recurring">
+  <div class="modal">
+    <div class="modal-header"><h3>↻ Nova Recorrente</h3><button class="modal-close" onclick="closeModal('modal-add-recurring')">✕</button></div>
+    <div class="form-grid">
+      <div class="form-group"><label>Título *</label><input type="text" id="rec-titulo" placeholder="ex: Aula semanal BEST Criadora"></div>
+      <div class="form-grid form-grid-2">
+        <div class="form-group"><label>Dia da semana *</label>
+          <select id="rec-dia">
+            <option value="0">Domingo</option>
+            <option value="1">Segunda</option>
+            <option value="2">Terça</option>
+            <option value="3">Quarta</option>
+            <option value="4">Quinta</option>
+            <option value="5">Sexta</option>
+            <option value="6">Sábado</option>
+          </select>
+        </div>
+        <div class="form-group"><label>Hora *</label><input type="time" id="rec-hora"></div>
+      </div>
+      <div class="form-grid form-grid-2">
+        <div class="form-group"><label>Tipo</label><select id="rec-tipo"><option value="gps">GPS do Perfil</option><option value="best">BEST Criadora</option><option value="consultoria">Consultoria Express</option><option value="reuniao">Reunião</option><option value="outro">Outro</option></select></div>
+        <div class="form-group"><label>Cliente / Contexto</label><input type="text" id="rec-cliente" placeholder="Nome ou descrição"></div>
+      </div>
+      <div class="form-group"><label>Observações</label><textarea id="rec-obs" placeholder="Link, contexto..."></textarea></div>
+      <div style="display:flex;gap:8px;justify-content:flex-end">
+        <button class="btn btn-ghost" onclick="closeModal('modal-add-recurring')">Cancelar</button>
+        <button class="btn btn-primary" onclick="saveRecurring()">Salvar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL SINCRONIZAÇÃO -->
+<div class="modal-overlay" id="modal-sync">
+  <div class="modal" style="max-width:480px">
+    <div class="modal-header"><h3>☁️ Sincronização entre dispositivos</h3><button class="modal-close" onclick="closeModal('modal-sync')">✕</button></div>
+    <div class="form-grid">
+
+      <!-- SEÇÃO GITHUB GIST -->
+      <div style="background:var(--cream);border-radius:10px;padding:16px;margin-bottom:4px">
+        <div style="font-size:13px;font-weight:700;color:var(--brown);margin-bottom:8px">🔗 GitHub Gist (sincronização automática)</div>
+        <div style="font-size:12px;color:var(--gray);margin-bottom:12px;line-height:1.6">
+          Seus dados ficam num Gist privado no GitHub. Em qualquer dispositivo, o app carrega de lá automaticamente ao abrir.
+          <br><br>
+          <strong>Configuração única:</strong><br>
+          1. Acesse <code style="background:#ede8e5;padding:1px 5px;border-radius:4px">github.com/settings/tokens/new</code><br>
+          2. Crie um token com permissão <strong>gist</strong><br>
+          3. Cole abaixo e clique em "Criar Gist"
+        </div>
+        <div class="form-group"><label>Token do GitHub</label>
+          <input type="password" id="sync-gh-token" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx"
+            style="font-family:monospace;font-size:12px">
+        </div>
+        <div class="form-group"><label>ID do Gist <span style="color:var(--gray);font-weight:400">(preenchido automaticamente)</span></label>
+          <input type="text" id="sync-gist-id" placeholder="Será gerado ao criar o Gist"
+            style="font-family:monospace;font-size:12px">
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn btn-ghost btn-sm" onclick="createGist()">✨ Criar Gist</button>
+          <button class="btn btn-ghost btn-sm" onclick="saveSyncConfig()">💾 Salvar configuração</button>
+          <button class="btn btn-primary btn-sm" onclick="loadFromGist(true)">⬇️ Carregar da nuvem</button>
+        </div>
+        <div id="sync-gist-status" style="font-size:11px;color:var(--gray);margin-top:10px"></div>
+      </div>
+
+      <!-- SEÇÃO BACKUP MANUAL -->
+      <div style="background:var(--cream);border-radius:10px;padding:16px">
+        <div style="font-size:13px;font-weight:700;color:var(--brown);margin-bottom:8px">📁 Backup manual</div>
+        <div style="font-size:12px;color:var(--gray);margin-bottom:12px">Exporte todos os dados como JSON para fazer backup ou transferir para outro dispositivo.</div>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-ghost btn-sm" onclick="exportData()">📤 Exportar JSON</button>
+          <label class="btn btn-ghost btn-sm" style="cursor:pointer">
+            📥 Importar JSON
+            <input type="file" accept=".json" style="display:none" onchange="importData(this)">
+          </label>
+        </div>
+      </div>
+
+      <div style="display:flex;justify-content:flex-end">
+        <button class="btn btn-ghost" onclick="closeModal('modal-sync')">Fechar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-add-gancho">
+  <div class="modal">
+    <div class="modal-header"><h3>🎣 Novo Gancho</h3><button class="modal-close" onclick="closeModal('modal-add-gancho')">✕</button></div>
+    <div class="form-grid">
+      <div class="form-group"><label>Gancho *</label><textarea id="gancho-texto" placeholder='ex: "Ninguém te conta que..."'></textarea></div>
+      <div class="form-group"><label>Pilar</label><select id="gancho-pilar"><option value="Educar">📚 Educar</option><option value="Conectar">💛 Conectar</option><option value="Converter">🎯 Converter</option><option value="Todos">✨ Todos os pilares</option></select></div>
+      <div style="display:flex;gap:8px;justify-content:flex-end">
+        <button class="btn btn-ghost" onclick="closeModal('modal-add-gancho')">Cancelar</button>
+        <button class="btn btn-primary" onclick="saveGancho()">Salvar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL TRANSAÇÃO FINANCEIRA -->
+<div class="modal-overlay" id="modal-add-transacao">
+  <div class="modal">
+    <div class="modal-header"><h3 id="trans-modal-title">💰 Nova Movimentação</h3><button class="modal-close" onclick="closeModal('modal-add-transacao')">✕</button></div>
+    <div class="form-grid">
+      <div class="form-grid form-grid-2">
+        <div class="form-group"><label>Tipo</label><select id="trans-tipo"><option value="entrada">✅ Entrada</option><option value="pendente">⏳ A entrar (pendente)</option><option value="saida">💸 Saída</option></select></div>
+        <div class="form-group"><label>Valor (R$) *</label><input type="number" id="trans-valor" placeholder="ex: 447.90" step="0.01"></div>
+      </div>
+      <div class="form-group"><label>Fonte / Descrição *</label><input type="text" id="trans-desc" placeholder="ex: Komprão, BEST — Ana, GPS Fulana"></div>
+      <div class="form-group"><label>Data</label><input type="date" id="trans-data"></div>
+      <div class="form-group"><label>Observações</label><textarea id="trans-obs" placeholder="Opcional"></textarea></div>
+      <div style="display:flex;gap:8px;justify-content:flex-end">
+        <button class="btn btn-ghost" onclick="closeModal('modal-add-transacao')">Cancelar</button>
+        <button class="btn btn-primary" onclick="saveTransacao()">Salvar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL NOVO CLIENTE -->
+<div class="modal-overlay" id="modal-add-cliente">
+  <div class="modal">
+    <div class="modal-header"><h3>🏢 Novo Cliente</h3><button class="modal-close" onclick="closeModal('modal-add-cliente')">✕</button></div>
+    <div class="form-grid">
+      <div class="form-group"><label>Nome do cliente *</label><input type="text" id="cli-nome" placeholder="ex: Fulana Boutique"></div>
+      <div class="form-grid form-grid-2">
+        <div class="form-group"><label>Valor/mês</label><input type="text" id="cli-valor" placeholder="ex: R$500/mês"></div>
+        <div class="form-group"><label>Tipo de contrato</label><input type="text" id="cli-tipo" placeholder="ex: Publi esporádica"></div>
+      </div>
+      <div class="form-group"><label>Descrição / escopo</label><input type="text" id="cli-obs" placeholder="ex: 1 reel por mês sobre novo produto"></div>
+      <div class="form-group"><label>Cor destaque</label><select id="cli-cor">
+        <option value="var(--pink)">Rosa</option>
+        <option value="var(--blue)">Azul</option>
+        <option value="var(--green)">Verde</option>
+        <option value="var(--yellow)">Amarelo</option>
+        <option value="var(--purple)">Roxo</option>
+        <option value="var(--orange)">Laranja</option>
+      </select></div>
+      <div class="form-group"><label>Entrega inicial</label><input type="text" id="cli-entrega" placeholder="ex: Reel de lançamento do produto"></div>
+      <div style="display:flex;gap:8px;justify-content:flex-end">
+        <button class="btn btn-ghost" onclick="closeModal('modal-add-cliente')">Cancelar</button>
+        <button class="btn btn-primary" onclick="saveCliente()">Salvar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ============================================================
+// CONSTANTS
+// ============================================================
+const DS_TRACKER = 'collection://04d11e7f-88d0-42da-ad1d-c7ab4e675a92';
+const DS_CRM     = 'collection://23d7fa4e-fba4-4ee9-a2bf-a507aeefc079';
+let crmData = [];
+
+// ============================================================
+// NAVIGATION
+// ============================================================
+function showPage(id, el) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('page-' + id).classList.add('active');
+  if (el) el.classList.add('active');
+  if (id === 'overview') { loadTracker(); loadCRM(); }
+  if (id === 'crm') loadCRM();
+  if (id === 'financeiro') renderFinanceiro();
+  if (id === 'instagram') { renderPosts(); renderIgPdfs(); }
+  if (id === 'tarefas') renderWeek('tasks');
+  if (id === 'stories') renderWeek('stories');
+  if (id === 'agenda') renderAgenda();
+  if (id === 'clientes') renderClientes();
+  if (id === 'blackfriday') renderBF();
+  if (id === 'ganchos') renderGanchos();
+  if (id === 'conteudo') renderCalendario();
+}
+
+function switchTab(section, tab, btn) {
+  const tabs = document.querySelectorAll(`#page-${section} .tab-content`);
+  tabs.forEach(t => t.classList.remove('active'));
+  document.querySelectorAll(`#page-${section} .tab-btn`).forEach(b => b.classList.remove('active'));
+  document.getElementById(`${section}-${tab}`).classList.add('active');
+  btn.classList.add('active');
+}
+
+// ============================================================
+// TRACKER
+// ============================================================
+async function loadTracker() {
+  try {
+    const r = await window.cowork.callMcpTool('mcp__8cb5083a-6615-4b9d-8e2f-b446858d47b3__notion-query-data-sources',
+      { data: { data_source_urls: [DS_TRACKER], query: 'SELECT * FROM "' + DS_TRACKER + '"' } });
+    const rows = parseResult(r);
+    document.getElementById('tracker-loading').style.display = 'none';
+    const table = document.getElementById('tracker-table'); table.style.display = '';
+    const tbody = document.getElementById('tracker-body'); tbody.innerHTML = '';
+    rows.forEach(row => {
+      const meta = row['Meta'] || 0, real = row['Realizado'] || 0;
+      const pct = meta > 0 ? Math.min(100, Math.round(real/meta*100)) : 0;
+      tbody.innerHTML += `<tr><td><strong>${row['Objetivo']||''}</strong></td><td>${real}</td><td>${meta}</td>
+        <td><div style="display:flex;align-items:center;gap:8px"><div class="progress-bar" style="flex:1;margin:0"><div class="progress-fill ${pct>=100?'green':''}" style="width:${pct}%"></div></div><span style="font-size:11px;color:var(--gray)">${pct}%</span></div></td>
+        <td>${row['Faltam']??(meta-real)}</td><td style="font-size:12px;color:var(--gray)">${row['Recompensa']||''}</td></tr>`;
+    });
+  } catch(e) { document.getElementById('tracker-loading').innerHTML = '⚠️ Não foi possível carregar o tracker.'; }
+}
+
+// ============================================================
+// CRM — local (localStorage)
+// ============================================================
+const CRM_SEED = [
+  { id:'n1', 'Nome':'Alice Schmidt (@Alicef.schmidt)', 'Canal':'Grupo gratuito', 'Interesse':'BEST Criadora', 'Estágio':'Lead frio', 'Telefone':'', 'Observações':'Maternidade/moda infantil. Dificuldade: encontrar seu formato. Te acompanha faz tempo.', 'date:Última conversa:start':'', 'Valor':'', 'Fechou':'não', createdAt:'2026-10-09' },
+  { id:'n2', 'Nome':'Jessica (@soujessicamonteiro)', 'Canal':'Formulário', 'Interesse':'GPS do Perfil', 'Estágio':'Fechado', 'Telefone':'', 'Observações':'GPS comprado. 1.050 seguidores. Nicho: motivação e fé. Dificuldade: converter seguidores em clientes. Veio pelo @emillyn.amorim.', 'date:Última conversa:start':'', 'Valor':'447,90', 'Fechou':'sim', createdAt:'2026-10-09' },
+  { id:'n3', 'Nome':'Jeisiane (@Jeisisemijoias)', 'Canal':'Grupo gratuito', 'Interesse':'BEST Criadora', 'Estágio':'Lead frio', 'Telefone':'', 'Observações':'CLT, joias. Quer engajar para vender. Medo de não conseguir aplicar.', 'date:Última conversa:start':'', 'Valor':'', 'Fechou':'não', createdAt:'2026-10-09' },
+  { id:'n4', 'Nome':'Tainã Vidal Maciel (@esteticatainamaciel)', 'Canal':'Formulário', 'Interesse':'GPS do Perfil', 'Estágio':'Fechado', 'Telefone':'', 'Observações':'GPS jun/2026. Estética/harmonização facial. 1.130 seguidores. Engajamento 2-5%. Veio pelo @emillyn.amorim.', 'date:Última conversa:start':'', 'Valor':'447,90', 'Fechou':'sim', createdAt:'2026-10-09' },
+  { id:'n5', 'Nome':'Helena (@helenaxracha)', 'Canal':'Grupo gratuito', 'Interesse':'BEST Criadora', 'Estágio':'Lead frio', 'Telefone':'', 'Observações':'CLT buscando renda extra. Vergonha de aparecer. Mai/2026.', 'date:Última conversa:start':'', 'Valor':'', 'Fechou':'não', createdAt:'2026-10-09' },
+  { id:'n6', 'Nome':'Samyra (@Chococalma.oficial)', 'Canal':'Formulário', 'Interesse':'GPS do Perfil', 'Estágio':'Fechado', 'Telefone':'', 'Observações':'GPS do Perfil jun/2026. Nicho: gastronomia/ChocoCalm. ~140 seguidores. Posta raramente. Veio pelo @emillyn.amorim.', 'date:Última conversa:start':'', 'Valor':'447,90', 'Fechou':'sim', createdAt:'2026-10-09' },
+  { id:'n7', 'Nome':'Myllena Feliciano (@myllena.Cristinaf)', 'Canal':'Grupo gratuito', 'Interesse':'GPS do Perfil', 'Estágio':'Lead frio', 'Telefone':'', 'Observações':'Empreendedora R$5-10k. Já investiu antes sem resultado — objeção forte.', 'date:Última conversa:start':'', 'Valor':'', 'Fechou':'não', createdAt:'2026-10-09' },
+  { id:'n8', 'Nome':'Dayane (@Studiodayanebritto)', 'Canal':'Grupo gratuito', 'Interesse':'GPS do Perfil', 'Estágio':'Lead frio', 'Telefone':'', 'Observações':'Empreendedora. Não sabe por onde começar. Quer ser conhecida na área.', 'date:Última conversa:start':'', 'Valor':'', 'Fechou':'não', createdAt:'2026-10-09' },
+  { id:'n9', 'Nome':'Rita Veloso (@__ritaveloso)', 'Canal':'Grupo gratuito', 'Interesse':'BEST Criadora', 'Estágio':'Lead frio', 'Telefone':'', 'Observações':'CLT, filha pequena. Vergonha de aparecer. Veio por reel sobre seguidores.', 'date:Última conversa:start':'', 'Valor':'', 'Fechou':'não', createdAt:'2026-10-09' },
+  { id:'n10', 'Nome':'Sara (@msaraaa_)', 'Canal':'Grupo gratuito', 'Interesse':'BEST Criadora', 'Estágio':'Lead frio', 'Telefone':'', 'Observações':'Maternidade/moda infantil. Acima de R$10k. Filhos + empresa. Medo de não aplicar.', 'date:Última conversa:start':'', 'Valor':'', 'Fechou':'não', createdAt:'2026-10-09' },
+  { id:'n11', 'Nome':'Bruna Spessato (@bruna.spessatto)', 'Canal':'Grupo gratuito', 'Interesse':'BEST Criadora', 'Estágio':'Fechado', 'Telefone':'', 'Observações':'Cliente dupla. GPS do Perfil set/2026. BEST Criadora fechado 09/10/2026. Nicho: bariátrica/lifestyle. 2.700 seguidores. Dificuldade: transformar visualizações em clientes.', 'date:Última conversa:start':'', 'Valor':'87,90', 'Fechou':'sim', createdAt:'2026-10-09' },
+  { id:'n12', 'Nome':'Julia (@eujuliads_)', 'Canal':'Grupo gratuito', 'Interesse':'BEST Criadora', 'Estágio':'Conversa iniciada', 'Telefone':'+55 31 8422-0951', 'Observações':'Quer criar conteúdo sobre Canva e IA. Nicho Lifestyle e Design. Emillyn já mandou msg de boas-vindas — aguardando resposta.', 'date:Última conversa:start':'', 'Valor':'', 'Fechou':'não', createdAt:'2026-10-13' },
+  { id:'n13', 'Nome':'Adrielli (lash · +55 47 9693-9528)', 'Canal':'WhatsApp', 'Interesse':'BEST Criadora', 'Estágio':'Proposta enviada', 'Telefone':'+55 47 9693-9528', 'Observações':'Veio dos stories do Dia das Crianças (12/10). Conta comercial de ago/2024. Nicho: lash. Proposta completa enviada — aguardando resposta.', 'date:Última conversa:start':'', 'Valor':'87,90', 'Fechou':'não', createdAt:'2026-10-13' },
+  { id:'n14', 'Nome':'Karen Papa', 'Canal':'Instagram', 'Interesse':'Outro', 'Estágio':'Lead frio', 'Telefone':'33999657397', 'Observações':'Nutricionista Clínica | 3.970 seguidores | @karenpapanutricionista | Consultoria Express | Veio pela isca Roube as Ideias', 'date:Última conversa:start':'2026-10-16', 'Valor':'', 'Fechou':'não', createdAt:'2026-10-16' },
+  { id:'n15', 'Nome':'Daniele Duarte', 'Canal':'Instagram', 'Interesse':'Outro', 'Estágio':'Lead frio', 'Telefone':'47997745568', 'Observações':'Cílios & Sobrancelhas | Joinville | 127 seguidores | @danieleduarte_studio | Consultoria Express | Veio pela isca Roube as Ideias', 'date:Última conversa:start':'2026-10-16', 'Valor':'', 'Fechou':'não', createdAt:'2026-10-16' },
+];
+function getCRMData() {
+  try {
+    const saved = localStorage.getItem('ea_crm');
+    if (!saved || saved === '[]') {
+      localStorage.setItem('ea_crm', JSON.stringify(CRM_SEED));
+      return CRM_SEED;
+    }
+    return JSON.parse(saved);
+  } catch { return CRM_SEED; }
+}
+function setCRMData(d) { localStorage.setItem('ea_crm', JSON.stringify(d)); }
+
+function loadCRM() {
+  crmData = getCRMData().sort((a,b) => {
+    const da = a['date:Última conversa:start']||a.createdAt||'';
+    const db = b['date:Última conversa:start']||b.createdAt||'';
+    return db > da ? 1 : -1;
+  });
+  renderCRMTable(); renderKanban(); updateOverviewCRM();
+}
+
+function getWPPMsg(lead) {
+  const nome = lead['Nome']||''; const estagio = lead['Estágio']||''; const interesse = lead['Interesse']||'';
+  const msgs = {
+    'GPS do Perfil': {
+      'Lead frio': `Oi ${nome}! 🤍 Aqui é a Emillyn. Vi que você se interessou pelo GPS do Perfil — análise completa do teu Instagram com plano de ação de 30 dias. Quer saber mais?`,
+      'Conversa iniciada': `Oi ${nome}! Aqui é a Emillyn 🤍 Passando pra ver se ficou alguma dúvida sobre o GPS do Perfil. São R$447,90 e as vagas são limitadas. Posso te reservar uma?`,
+      'Proposta enviada': `Oi ${nome}! 🎀 Passando pra saber se você teve chance de olhar a proposta do GPS. Tenho uma janela aberta essa semana pra te atender!`,
+    },
+    'BEST Criadora': {
+      'Lead frio': `Oi ${nome}! 🤍 Aqui é a Emillyn. Que bom ter você por aqui! Me conta: você já cria conteúdo ou tá começando do zero?`,
+      'Conversa iniciada': `Oi ${nome}! Aqui é a Emillyn 🎀 Passando pra ver se você já conhece a BEST Criadora — minha comunidade mensal de criação de conteúdo. São R$87,90/mês. Quer o link?`,
+      'Proposta enviada': `Oi ${nome}! 🤍 Emillyn aqui. Você chegou a ver o link da BEST? Essa semana ainda está com condição especial!`,
+    },
+    'Consultoria Express': {
+      'Lead frio': `Oi ${nome}! 🤍 Aqui é a Emillyn. Vi que você se interessou pela consultoria express gratuita! Preenche esse formulário rapidinho: https://forms.gle/o3bXAiRej7BFBPxz5 🎀`,
+      'Conversa iniciada': `Oi ${nome}! Emillyn aqui 🎀 Você chegou a preencher o formulário? Assim que receber confirmo a tua vaga!`,
+      'Proposta enviada': `Oi ${nome}! 🤍 Passando pra confirmar nosso horário. Você ainda tem interesse na consultoria express?`,
+    }
+  };
+  return (msgs[interesse]||{})[estagio] || `Oi ${nome}! 🤍 Aqui é a Emillyn, passando pra dar um oi!`;
+}
+
+function renderCRMTable() {
+  const tbody = document.getElementById('crm-body'); if (!tbody) return;
+  tbody.innerHTML = '';
+  if (!crmData.length) { tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--gray);padding:24px">Nenhum lead ainda. Clique em "+ Novo lead" para adicionar.</td></tr>'; return; }
+  crmData.forEach(lead => {
+    const phone = (lead['Telefone']||'').replace(/\D/g,'');
+    const wppLink = phone ? `https://wa.me/55${phone}?text=${encodeURIComponent(getWPPMsg(lead))}` : '';
+    const lid = lead.id || lead.url || '';
+    tbody.innerHTML += `<tr onclick="viewLead('${lid}')" style="cursor:pointer">
+      <td><strong>${lead['Nome']||'—'}</strong></td>
+      <td>${badgeCanal(lead['Canal'])}</td><td>${badgeInteresse(lead['Interesse'])}</td><td>${badgeEstagio(lead['Estágio'])}</td>
+      <td style="font-size:11px;color:var(--gray)">${formatDate(lead['date:Última conversa:start'])}</td>
+      <td style="font-weight:600">${lead['Valor']?'R$'+Number(lead['Valor']).toLocaleString('pt-BR',{minimumFractionDigits:2}):'—'}</td>
+      <td onclick="event.stopPropagation()">${wppLink?`<a href="${wppLink}" target="_blank" class="wpp-btn">💬 WPP</a>`:'<span style="color:var(--gray);font-size:11px">sem tel.</span>'}</td>
+      <td onclick="event.stopPropagation()" style="display:flex;gap:4px">
+        <button class="copy-btn" onclick="viewLead('${lid}')">👁</button>
+        <button class="copy-btn" onclick="openAddLead('${lid}')">✏️</button>
+        <button class="copy-btn" onclick="deleteLead('${lid}')" style="color:var(--red)">🗑</button>
+      </td>
+    </tr>`;
+  });
+}
+
+function renderKanban() {
+  const board = document.getElementById('kanban-board'); if (!board) return;
+  const stages = ['Lead frio','Conversa iniciada','Proposta enviada','Fechado','Perdido'];
+  const colors = {'Lead frio':'#e8e8e8','Conversa iniciada':'#dce8f5','Proposta enviada':'#f5ead0','Fechado':'#d5eedf','Perdido':'#f5dcdc'};
+  board.innerHTML = '';
+  stages.forEach(stage => {
+    const leads = crmData.filter(l => l['Estágio']===stage);
+    const col = document.createElement('div'); col.className = 'kanban-col';
+    col.innerHTML = `<div class="kanban-col-header" style="background:${colors[stage]}">${stage} <span style="opacity:.6">(${leads.length})</span></div>`;
+    leads.forEach(lead => {
+      const phone = (lead['Telefone']||'').replace(/\D/g,'');
+      const wppLink = phone ? `https://wa.me/55${phone}?text=${encodeURIComponent(getWPPMsg(lead))}` : '';
+      const lid = lead.id || lead.url || '';
+      col.innerHTML += `<div class="kanban-card" onclick="viewLead('${lid}')">
+        <div class="lead-name">${lead['Nome']||'—'}</div>
+        <div class="lead-info">${lead['Interesse']||''} ${lead['Valor']?'· R$'+lead['Valor']:''}</div>
+        ${wppLink?`<a href="${wppLink}" target="_blank" onclick="event.stopPropagation()" class="wpp-btn" style="margin-top:7px;display:inline-block;font-size:10px;padding:2px 7px">💬 WPP</a>`:''}
+      </div>`;
+    });
+    board.appendChild(col);
+  });
+}
+
+function updateOverviewCRM() {
+  const leadsEl = document.getElementById('ov-leads'), fechEl = document.getElementById('ov-fechamentos');
+  if (leadsEl) leadsEl.textContent = crmData.length||'0';
+  if (fechEl) fechEl.textContent = crmData.filter(l=>l['Estágio']==='Fechado').length;
+}
+
+function viewLead(id) {
+  const lead = crmData.find(l => (l.id||l.url)===id); if (!lead) return;
+  const phone = (lead['Telefone']||'').replace(/\D/g,'');
+  const wppLink = phone ? `https://wa.me/55${phone}?text=${encodeURIComponent(getWPPMsg(lead))}` : '';
+  const wppMsg = getWPPMsg(lead);
+  document.getElementById('view-lead-title').textContent = lead['Nome']||'Lead';
+  document.getElementById('view-lead-content').innerHTML = `<div class="form-grid">
+    <div class="cards cards-2">
+      <div><div class="card-label">Canal</div><div style="margin-top:4px">${badgeCanal(lead['Canal'])}</div></div>
+      <div><div class="card-label">Interesse</div><div style="margin-top:4px">${badgeInteresse(lead['Interesse'])}</div></div>
+      <div><div class="card-label">Estágio</div><div style="margin-top:4px">${badgeEstagio(lead['Estágio'])}</div></div>
+      <div><div class="card-label">Valor</div><div style="margin-top:4px;font-weight:700">${lead['Valor']?'R$'+Number(lead['Valor']).toLocaleString('pt-BR',{minimumFractionDigits:2}):'—'}</div></div>
+    </div>
+    ${wppLink?`<div><div class="card-label" style="margin-bottom:6px">💬 Mensagem WPP</div><div class="msg-box" style="margin:0">${wppMsg}</div><div style="display:flex;gap:6px;margin-top:8px"><a href="${wppLink}" target="_blank" class="btn btn-wpp btn-sm">💬 Abrir WhatsApp</a><button class="btn btn-ghost btn-sm" onclick="copyText(this,\`${wppMsg.replace(/`/g,'\\`').replace(/\n/g,'\\n')}\`)">📋 Copiar</button></div></div>`:''}
+    ${lead['Observações']?`<div><div class="card-label">Observações</div><p style="margin-top:5px;font-size:13px">${lead['Observações']}</p></div>`:''}
+    <div style="display:flex;gap:8px;justify-content:flex-end">
+      <button class="btn btn-ghost btn-sm" onclick="closeModal('modal-view-lead');openAddLead('${id}')">✏️ Editar</button>
+      <button class="btn btn-ghost btn-sm" style="color:var(--red)" onclick="closeModal('modal-view-lead');deleteLead('${id}')">🗑 Remover</button>
+    </div>
+  </div>`;
+  openModal('modal-view-lead');
+}
+
+function openAddLead(id) {
+  const modal = document.getElementById('modal-add-lead');
+  modal._editId = id || null;
+  const lead = id ? getCRMData().find(l=>l.id===id) : null;
+  document.getElementById('lead-nome').value = lead?.['Nome']||'';
+  document.getElementById('lead-telefone').value = lead?.['Telefone']||'';
+  document.getElementById('lead-obs').value = lead?.['Observações']||'';
+  document.getElementById('lead-canal').value = lead?.['Canal']||'Instagram';
+  document.getElementById('lead-interesse').value = lead?.['Interesse']||'GPS do Perfil';
+  document.getElementById('lead-estagio').value = lead?.['Estágio']||'Lead frio';
+  document.getElementById('lead-data').value = lead?.['date:Última conversa:start']||today();
+  document.getElementById('lead-valor').value = lead?.['Valor']||'';
+  document.getElementById('modal-add-lead').querySelector('h3').textContent = id ? '✏️ Editar Lead' : '➕ Novo Lead';
+  openModal('modal-add-lead');
+}
+
+function saveLead() {
+  const nome = document.getElementById('lead-nome').value.trim();
+  if (!nome) { showToast('Informe o nome do lead','error'); return; }
+  const modal = document.getElementById('modal-add-lead');
+  const editId = modal._editId;
+  const data = getCRMData();
+  const lead = {
+    id: editId || 'lead-'+Date.now(),
+    'Nome': nome,
+    'Canal': document.getElementById('lead-canal').value,
+    'Interesse': document.getElementById('lead-interesse').value,
+    'Estágio': document.getElementById('lead-estagio').value,
+    'Telefone': document.getElementById('lead-telefone').value,
+    'Observações': document.getElementById('lead-obs').value,
+    'date:Última conversa:start': document.getElementById('lead-data').value,
+    'Valor': parseFloat(document.getElementById('lead-valor').value)||undefined,
+    createdAt: editId ? (data.find(l=>l.id===editId)||{}).createdAt : today(),
+    url: editId ? (data.find(l=>l.id===editId)||{}).url : ''
+  };
+  if (editId) { const idx=data.findIndex(l=>l.id===editId); if(idx>=0) data[idx]=lead; }
+  else data.unshift(lead);
+  setCRMData(data); closeModal('modal-add-lead'); loadCRM(); showToast('Lead salvo! ✅','success');
+  modal._editId = null;
+}
+
+function deleteLead(id) {
+  if (!confirm('Remover este lead?')) return;
+  setCRMData(getCRMData().filter(l=>l.id!==id)); loadCRM(); showToast('Removido','success');
+}
+
+// ============================================================
+// INSTAGRAM
+// ============================================================
+function getPosts() { try { return JSON.parse(localStorage.getItem('ea_posts')||'[]'); } catch { return []; } }
+function setPosts(p) { localStorage.setItem('ea_posts', JSON.stringify(p)); }
+
+(function seedPosts() {
+  if (getPosts().length) return;
+  const t = today(); const scheduled = [];
+  const d = new Date();
+  for (let i=1; i<=14; i++) { d.setDate(d.getDate()+1); if (d.getDay()===0) continue;
+    scheduled.push({ id: Date.now()+i, titulo: 'Post agendado', data: d.toISOString().split('T')[0], tipo:'Carrossel', serie:'Outro', status:'agendado', insights:{alcance:0,curtidas:0,salvamentos:0,comentarios:0,compartilhamentos:0,cliques:0}, obs:'' }); }
+  setPosts([{ id: Date.now(), titulo:'Se o Instagram do Phil Dunphy fosse meu', data:t, tipo:'Carrossel', serie:'Série 2 — Se o Instagram fosse meu', status:'publicado', insights:{alcance:0,curtidas:0,salvamentos:0,comentarios:0,compartilhamentos:0,cliques:0}, obs:'Primeiro da série personagens. CTA: Comenta GPS.' }, ...scheduled]);
+})();
+
+function renderPosts() {
+  const posts = getPosts().sort((a,b)=>a.data<b.data?1:-1);
+  const pub = posts.filter(p=>p.status==='publicado'), sched = posts.filter(p=>p.status==='agendado');
+  document.getElementById('ig-pub-count').textContent = pub.length;
+  document.getElementById('ig-sched-count').textContent = sched.length;
+  const reaches = pub.map(p=>p.insights?.alcance||0).filter(v=>v>0);
+  document.getElementById('ig-avg-reach').textContent = reaches.length ? Math.round(reaches.reduce((a,b)=>a+b,0)/reaches.length).toLocaleString('pt-BR') : '—';
+  document.getElementById('ig-total-saves').textContent = pub.reduce((a,p)=>a+(p.insights?.salvamentos||0),0)||'—';
+  const container = document.getElementById('posts-list');
+  container.innerHTML = posts.map(p => {
+    const hasInsights = p.insights && (p.insights.alcance>0||p.insights.curtidas>0);
+    return `<div class="post-card">
+      <div class="post-info">
+        <div class="post-title">${p.titulo}</div>
+        <div class="post-meta">
+          ${p.status==='publicado'?`<span style="color:var(--green);font-weight:600">✅ Publicado · ${formatDate(p.data)}</span>`:p.status==='agendado'?`<span style="color:var(--yellow);font-weight:600">📅 Agendado · ${formatDate(p.data)}</span>`:`<span style="color:var(--gray)">📝 Rascunho</span>`}
+          <span>· ${p.tipo}</span><span>· ${p.serie}</span>
+        </div>
+        ${hasInsights?`<div class="post-metrics">
+          ${p.insights.alcance?`<div class="metric-pill"><span class="metric-val">${p.insights.alcance.toLocaleString('pt-BR')}</span><span class="metric-lbl">Alcance</span></div>`:''}
+          ${p.insights.curtidas?`<div class="metric-pill"><span class="metric-val">${p.insights.curtidas}</span><span class="metric-lbl">Curtidas</span></div>`:''}
+          ${p.insights.salvamentos?`<div class="metric-pill"><span class="metric-val">${p.insights.salvamentos}</span><span class="metric-lbl">Salvamentos</span></div>`:''}
+          ${p.insights.comentarios?`<div class="metric-pill"><span class="metric-val">${p.insights.comentarios}</span><span class="metric-lbl">Comentários</span></div>`:''}
+        </div>`:p.status==='publicado'?'<p style="font-size:11px;color:var(--gray);margin-top:5px">Insights não registrados ainda</p>':''}
+        ${p.obs?`<p style="font-size:11px;color:var(--gray);margin-top:4px;font-style:italic">${p.obs}</p>`:''}
+      </div>
+      <div class="post-actions">
+        <button class="btn btn-ghost btn-sm" onclick="editPost(${p.id})">✏️</button>
+        <button class="btn btn-ghost btn-sm" onclick="deletePost(${p.id})" style="color:var(--red)">🗑</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function openAddPost() {
+  document.getElementById('post-titulo').value=''; document.getElementById('post-data').value=today();
+  document.getElementById('post-status').value='publicado'; document.getElementById('post-tipo').value='Carrossel';
+  ['post-alcance','post-curtidas','post-salvamentos','post-comentarios','post-compartilhamentos','post-cliques'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('post-obs').value=''; document.getElementById('modal-add-post')._editId=null;
+  document.getElementById('post-modal-title').textContent='📸 Registrar Post'; openModal('modal-add-post');
+}
+
+function editPost(id) {
+  const p = getPosts().find(x=>x.id===id); if (!p) return;
+  document.getElementById('post-titulo').value=p.titulo; document.getElementById('post-data').value=p.data;
+  document.getElementById('post-status').value=p.status; document.getElementById('post-tipo').value=p.tipo;
+  document.getElementById('post-serie').value=p.serie;
+  ['alcance','curtidas','salvamentos','comentarios','compartilhamentos','cliques'].forEach(k=>{ document.getElementById('post-'+k).value=p.insights?.[k]||''; });
+  document.getElementById('post-obs').value=p.obs||''; document.getElementById('modal-add-post')._editId=id;
+  document.getElementById('post-modal-title').textContent='✏️ Editar Post'; openModal('modal-add-post');
+}
+
+function savePost() {
+  const titulo = document.getElementById('post-titulo').value.trim(); if (!titulo) { showToast('Informe o título','error'); return; }
+  const posts = getPosts(); const editId = document.getElementById('modal-add-post')._editId;
+  const postData = { id: editId||Date.now(), titulo, data: document.getElementById('post-data').value,
+    status: document.getElementById('post-status').value, tipo: document.getElementById('post-tipo').value,
+    serie: document.getElementById('post-serie').value,
+    insights: { alcance:parseInt(document.getElementById('post-alcance').value)||0, curtidas:parseInt(document.getElementById('post-curtidas').value)||0,
+      salvamentos:parseInt(document.getElementById('post-salvamentos').value)||0, comentarios:parseInt(document.getElementById('post-comentarios').value)||0,
+      compartilhamentos:parseInt(document.getElementById('post-compartilhamentos').value)||0, cliques:parseInt(document.getElementById('post-cliques').value)||0 },
+    obs: document.getElementById('post-obs').value };
+  if (editId) { const idx=posts.findIndex(p=>p.id===editId); if (idx>=0) posts[idx]=postData; } else posts.unshift(postData);
+  setPosts(posts); closeModal('modal-add-post'); renderPosts(); showToast('Post salvo! ✅','success');
+}
+
+function deletePost(id) { if (!confirm('Remover este post?')) return; setPosts(getPosts().filter(p=>p.id!==id)); renderPosts(); }
+
+// ============================================================
+// TAREFAS & STORIES
+// ============================================================
+let weekStarts = { tasks: getMonday(new Date()), stories: getMonday(new Date()) };
+
+function getMonday(d) { const day=d.getDay(), diff=(day===0?-6:1-day); const m=new Date(d); m.setDate(d.getDate()+diff); m.setHours(0,0,0,0); return m; }
+function prevWeek(type) { weekStarts[type].setDate(weekStarts[type].getDate()-7); renderWeek(type); }
+function nextWeek(type) { weekStarts[type].setDate(weekStarts[type].getDate()+7); renderWeek(type); }
+
+function getItems(type) { try { return JSON.parse(localStorage.getItem('ea_'+type)||'[]'); } catch { return []; } }
+function setItems(type, items) { localStorage.setItem('ea_'+type, JSON.stringify(items)); }
+
+function renderWeek(type) {
+  const gridId = type==='tasks'?'tasks-grid':'stories-grid';
+  const grid = document.getElementById(gridId); if (!grid) return;
+  const ws = weekStarts[type];
+  const dayNames = ['Segunda','Terça','Quarta','Quinta','Sexta','Sábado'];
+  const todayD = new Date(); todayD.setHours(0,0,0,0);
+  const we = new Date(ws); we.setDate(we.getDate()+5);
+  const label = `${ws.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'})} – ${we.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'})}`;
+  const labelEl = document.getElementById(type==='tasks'?'tasks-week-label':'stories-week-label');
+  if (labelEl) labelEl.textContent = label;
+  const items = getItems(type), posts = getPosts();
+  grid.innerHTML = '';
+  for (let i=0; i<6; i++) {
+    const day = new Date(ws); day.setDate(day.getDate()+i);
+    const dateStr = day.toISOString().split('T')[0];
+    const isToday = day.getTime()===todayD.getTime();
+    const dayItems = items.filter(t=>t.date===dateStr);
+    const dayPost = type==='tasks' ? posts.find(p=>p.data===dateStr) : null;
+    const col = document.createElement('div'); col.className='day-col';
+    const placeholder = type==='tasks' ? '+ Adicionar tarefa' : '+ Adicionar story';
+    col.innerHTML = `<div class="day-header"><span>${dayNames[i]} ${isToday?'<span class="today-marker">HOJE</span>':''}</span><span class="day-date">${day.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'})}</span></div>
+      ${dayPost?`<div class="post-badge" style="background:${dayPost.status==='publicado'?'#d5eedf':'#f5ead0'};color:${dayPost.status==='publicado'?'#3a7a5a':'#8a6020'}">${dayPost.status==='publicado'?'✅':'📅'} ${dayPost.titulo.slice(0,32)}${dayPost.titulo.length>32?'…':''}</div>`:''}
+      <div id="${type}-items-${dateStr}">${dayItems.map(t=>`<div class="task-item" id="${type}-item-${t.id}"><input type="checkbox" ${t.done?'checked':''} onchange="toggleItem('${type}',${t.id})"><span class="task-text ${t.done?'done':''}" onclick="toggleItem('${type}',${t.id})">${t.text}</span><button class="task-del" onclick="deleteItem('${type}',${t.id})">✕</button></div>`).join('')}</div>
+      <div class="task-add"><input type="text" placeholder="${placeholder}" id="${type}-input-${dateStr}" onkeydown="if(event.key==='Enter')addItem('${type}','${dateStr}')"><button onclick="addItem('${type}','${dateStr}')">+</button></div>`;
+    grid.appendChild(col);
+  }
+}
+
+function addItem(type, dateStr) {
+  const input = document.getElementById(`${type}-input-${dateStr}`); const text = input.value.trim(); if (!text) return;
+  const items = getItems(type); items.push({ id: Date.now(), date: dateStr, text, done: false }); setItems(type, items); input.value=''; renderWeek(type);
+}
+function toggleItem(type, id) { const items=getItems(type), t=items.find(x=>x.id===id); if(t){t.done=!t.done;setItems(type,items);renderWeek(type);} }
+function deleteItem(type, id) { setItems(type,getItems(type).filter(t=>t.id!==id)); renderWeek(type); }
+
+// ============================================================
+// AGENDA
+// ============================================================
+function getAppts() { try { return JSON.parse(localStorage.getItem('ea_agenda')||'[]'); } catch { return []; } }
+function setAppts(a) { localStorage.setItem('ea_agenda', JSON.stringify(a)); }
+
+function openAddAppt() {
+  document.getElementById('appt-titulo').value=''; document.getElementById('appt-data').value=today();
+  document.getElementById('appt-hora').value=''; document.getElementById('appt-tipo').selectedIndex=0;
+  document.getElementById('appt-cliente').value=''; document.getElementById('appt-obs').value='';
+  openModal('modal-add-appt');
+}
+
+function saveAppt() {
+  const titulo=document.getElementById('appt-titulo').value.trim(), data=document.getElementById('appt-data').value, hora=document.getElementById('appt-hora').value;
+  if (!titulo||!data||!hora) { showToast('Preencha título, data e hora','error'); return; }
+  const appts = getAppts();
+  appts.push({ id:Date.now(), titulo, data, hora, tipo:document.getElementById('appt-tipo').value, cliente:document.getElementById('appt-cliente').value, obs:document.getElementById('appt-obs').value });
+  setAppts(appts); closeModal('modal-add-appt'); renderAgenda(); showToast('Agendamento salvo! ✅','success');
+}
+
+// ---- REGRAS DE RECORRENTES ----
+const REC_RULES_SEED = [
+  { id:'rr-mf10', titulo:'🎓 Aula ao vivo — Manoela Flores', diaSemana:3, hora:'10:00', tipo:'outro', cliente:'Mentoria Manoela', obs:'Aula ao vivo da mentoria — assistir ao vivo' },
+  { id:'rr-mf20', titulo:'📺 Aula gravada — Manoela Flores', diaSemana:3, hora:'20:00', tipo:'outro', cliente:'Mentoria Manoela', obs:'Aula gravada para ver no horário livre' },
+  { id:'rr-best-sex', titulo:'📚 Aula semanal — BEST Criadora', diaSemana:5, hora:'20:00', tipo:'best', cliente:'BEST Criadora', obs:'Encontro semanal da comunidade' },
+];
+function getRecurringRules() {
+  try {
+    const saved = localStorage.getItem('ea_rec_rules');
+    if (!saved || saved === '[]') { localStorage.setItem('ea_rec_rules', JSON.stringify(REC_RULES_SEED)); return REC_RULES_SEED; }
+    return JSON.parse(saved);
+  } catch { return REC_RULES_SEED; }
+}
+function setRecurringRules(rules) { localStorage.setItem('ea_rec_rules', JSON.stringify(rules)); }
+
+function generateOccurrences(rule, weeks=8) {
+  const result = [];
+  const d = new Date(); d.setHours(0,0,0,0);
+  const target = rule.diaSemana; // 0=dom ... 6=sáb
+  const diff = (target - d.getDay() + 7) % 7;
+  d.setDate(d.getDate() + (diff === 0 ? 0 : diff));
+  for (let i = 0; i < weeks; i++) {
+    const dateStr = d.toISOString().split('T')[0];
+    result.push({ id:`rec-${rule.id}-${dateStr}`, titulo:rule.titulo, data:dateStr, hora:rule.hora, tipo:rule.tipo, cliente:rule.cliente||'', obs:rule.obs||'', recorrente:true, ruleId:rule.id });
+    d.setDate(d.getDate() + 7);
+  }
+  return result;
+}
+
+function getAllRecurringOccurrences() {
+  const rules = getRecurringRules();
+  const deletedRec = JSON.parse(localStorage.getItem('ea_deleted_rec')||'[]');
+  let all = [];
+  rules.forEach(r => { all = all.concat(generateOccurrences(r, 8)); });
+  return all.filter(o => !deletedRec.includes(o.id));
+}
+
+function openAddRecurring() {
+  document.getElementById('rec-titulo').value='';
+  document.getElementById('rec-dia').value='5';
+  document.getElementById('rec-hora').value='20:00';
+  document.getElementById('rec-tipo').value='outro';
+  document.getElementById('rec-cliente').value='';
+  document.getElementById('rec-obs').value='';
+  openModal('modal-add-recurring');
+}
+
+function saveRecurring() {
+  const titulo = document.getElementById('rec-titulo').value.trim();
+  const hora = document.getElementById('rec-hora').value;
+  if (!titulo || !hora) { showToast('Preencha título e hora','error'); return; }
+  const rules = getRecurringRules();
+  rules.push({
+    id: 'rr-'+Date.now(),
+    titulo,
+    diaSemana: parseInt(document.getElementById('rec-dia').value),
+    hora,
+    tipo: document.getElementById('rec-tipo').value,
+    cliente: document.getElementById('rec-cliente').value.trim(),
+    obs: document.getElementById('rec-obs').value.trim()
+  });
+  setRecurringRules(rules);
+  closeModal('modal-add-recurring');
+  renderAgenda();
+  showToast('Recorrente salva! ↻','success');
+}
+
+function deleteRecurringRule(id) {
+  if (!confirm('Remover esta regra recorrente? Todos os eventos gerados por ela serão removidos da agenda.')) return;
+  setRecurringRules(getRecurringRules().filter(r => r.id !== id));
+  renderAgenda();
+  showToast('Regra removida','success');
+}
+
+function renderRecurringRules() {
+  const el = document.getElementById('agenda-list-recorrentes'); if (!el) return;
+  const rules = getRecurringRules();
+  const dias = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
+  if (!rules.length) { el.innerHTML='<p style="color:var(--gray);font-size:13px;padding:24px;text-align:center">Nenhuma regra recorrente.</p>'; return; }
+  el.innerHTML = `<div style="margin-bottom:12px;font-size:12px;color:var(--gray)">Estas regras geram eventos automaticamente nas próximas semanas.</div>`
+    + rules.map(r => `
+    <div class="appt-card tipo-${r.tipo}" style="align-items:center">
+      <div class="appt-time"><div class="hora">${r.hora}</div><div class="data" style="font-weight:600">${dias[r.diaSemana]}</div></div>
+      <div class="appt-info">
+        <div class="appt-titulo">${r.titulo}</div>
+        <div class="appt-meta">${badgeTipoAppt(r.tipo)}${r.cliente?' · '+r.cliente:''}</div>
+        ${r.obs?`<div style="font-size:11px;color:var(--gray);margin-top:3px">${r.obs}</div>`:''}
+      </div>
+      <button class="copy-btn" onclick="deleteRecurringRule('${r.id}')" style="color:var(--red)" title="Remover regra">🗑</button>
+    </div>`).join('');
+}
+
+function renderAgenda() {
+  const saved = getAppts();
+  const recurring = getAllRecurringOccurrences();
+  const all = [...saved, ...recurring].sort((a,b)=>a.data+a.hora<b.data+b.hora?-1:1);
+  const now = today();
+  const proximos = all.filter(a=>a.data>=now);
+  renderApptList('agenda-list-proximos', proximos, now, true);
+  renderApptList('agenda-list-todos', all, now, true);
+  renderRecurringRules();
+}
+
+function renderApptList(containerId, appts, now) {
+  const el = document.getElementById(containerId); if (!el) return;
+  if (!appts.length) { el.innerHTML='<p style="color:var(--gray);font-size:13px;padding:24px;text-align:center">Nenhum agendamento.</p>'; return; }
+  el.innerHTML = appts.map(a => {
+    const isRec = a.recorrente;
+    const badge = isRec ? '<span class="badge badge-purple" style="font-size:10px;margin-left:5px">↻ Recorrente</span>' : '';
+    return `<div class="appt-card tipo-${a.tipo} ${a.data<now?'past':''}">
+      <div class="appt-time"><div class="hora">${a.hora}</div><div class="data">${formatDate(a.data)}</div></div>
+      <div class="appt-info"><div class="appt-titulo">${a.titulo}${badge}</div><div class="appt-meta">${badgeTipoAppt(a.tipo)}${a.cliente?' · '+a.cliente:''}</div>${a.obs?`<div style="font-size:11px;color:var(--gray);margin-top:3px">${a.obs}</div>`:''}</div>
+      <button class="copy-btn" onclick="${isRec?`hideRecAppt('${a.id}')`:`deleteAppt(${a.id})`}" style="color:var(--red)" title="${isRec?'Ocultar esta ocorrência':'Remover'}">🗑</button>
+    </div>`;
+  }).join('');
+}
+
+function deleteAppt(id) { if (!confirm('Remover agendamento?')) return; setAppts(getAppts().filter(a=>a.id!==id)); renderAgenda(); }
+function hideRecAppt(id) {
+  if (!confirm('Ocultar esta ocorrência recorrente?')) return;
+  const deleted = JSON.parse(localStorage.getItem('ea_deleted_rec')||'[]');
+  deleted.push(id); localStorage.setItem('ea_deleted_rec', JSON.stringify(deleted)); renderAgenda();
+}
+
+function badgeTipoAppt(tipo) {
+  const map = { gps:'badge-orange', best:'badge-pink', consultoria:'badge-blue', reuniao:'badge-purple', outro:'badge-gray' };
+  const labels = { gps:'GPS do Perfil', best:'BEST Criadora', consultoria:'Consultoria Express', reuniao:'Reunião', outro:'Outro' };
+  return `<span class="badge ${map[tipo]||'badge-gray'}">${labels[tipo]||tipo}</span>`;
+}
+
+// ============================================================
+// CALENDÁRIO DE CONTEÚDO
+// ============================================================
+const CALENDARIO_POSTS = [
+  { id:'c1', data:'20/10', dia:'Ter', formato:'Carrossel', titulo:'Se o instagram do Drácula fosse meu, o Hotel Transilvânia ia viver lotado', status:'publicar-hoje' },
+  { id:'c2', data:'21/10', dia:'Qua', formato:'Reel', titulo:'Ideias pra fugir do chato "arrume-se comigo"', status:'planejado' },
+  { id:'c3', data:'22/10', dia:'Qui', formato:'Carrossel', titulo:'Como organizar seu dia sendo mãe empreendedora', status:'planejado' },
+  { id:'c4', data:'23/10', dia:'Sex', formato:'Carrossel', titulo:'Roube minhas ideias — parte 5', status:'planejado' },
+  { id:'c5', data:'25/10', dia:'Sáb', formato:'Reel', titulo:'Resposta ao vivo dos comentários — método fora da caixa com Luan Santana', status:'planejado' },
+  { id:'c6', data:'26/10', dia:'Seg', formato:'Carrossel', titulo:'Se o instagram da Katarina de League of Legends fosse meu', status:'planejado' },
+  { id:'c7', data:'27/10', dia:'Ter', formato:'Carrossel', titulo:'Aprenda a roubar como um artista', status:'planejado' },
+  { id:'c8', data:'28/10', dia:'Qua', formato:'Carrossel', titulo:'Ideias de conteúdo diferentonas pra loja de roupas', status:'planejado' },
+  { id:'c9', data:'29/10', dia:'Qui', formato:'Reel', titulo:'Ideias de conteúdo pra lash designer', status:'planejado' },
+  { id:'c10', data:'30/10', dia:'Sex', formato:'Carrossel', titulo:'Como analisar suas métricas', status:'planejado' },
+  { id:'c11', data:'31/10', dia:'Sáb', formato:'Reel', titulo:'Preparando calendário de conteúdo das minhas alunas', status:'planejado' },
+];
+
+function getCalStatuses() { try { return JSON.parse(localStorage.getItem('ea_cal_status')||'{}'); } catch { return {}; } }
+function setCalStatuses(s) { localStorage.setItem('ea_cal_status', JSON.stringify(s)); }
+
+const CAL_STATUS_ORDER = ['planejado','em-edicao','programado','publicado'];
+const CAL_STATUS_LABELS = { 'planejado':'Planejado', 'em-edicao':'✏️ Em edição', 'programado':'📅 Programado', 'publicado':'✅ Publicado', 'publicar-hoje':'🔥 Publicar hoje' };
+const CAL_STATUS_BADGES = { 'planejado':'badge-gray', 'em-edicao':'badge-yellow', 'programado':'badge-blue', 'publicado':'badge-green', 'publicar-hoje':'badge-orange' };
+
+function cycleCalStatus(id) {
+  const statuses = getCalStatuses();
+  const post = CALENDARIO_POSTS.find(p=>p.id===id); if (!post) return;
+  const current = statuses[id] || post.status;
+  const idx = CAL_STATUS_ORDER.indexOf(current);
+  const next = CAL_STATUS_ORDER[(idx+1) % CAL_STATUS_ORDER.length];
+  statuses[id] = next; setCalStatuses(statuses); renderCalendario();
+}
+
+function renderCalendario() {
+  const el = document.getElementById('calendario-container'); if (!el) return;
+  const statuses = getCalStatuses();
+  el.innerHTML = `<table><thead><tr><th>Data</th><th>Dia</th><th>Formato</th><th>Conteúdo</th><th>Status</th></tr></thead><tbody>` +
+    CALENDARIO_POSTS.map((p,i) => {
+      const st = statuses[p.id] || p.status;
+      const badgeCls = CAL_STATUS_BADGES[st] || 'badge-gray';
+      const formatBadge = p.formato === 'Carrossel' ? 'badge-pink' : 'badge-blue';
+      const rowStyle = i===0 ? 'background:#fff9f0' : (i===5 ? 'border-top:2px solid var(--pink-light)' : '');
+      return `<tr style="${rowStyle}">
+        <td><strong>${p.data}</strong></td><td>${p.dia}</td>
+        <td><span class="badge ${formatBadge}">${p.formato}</span></td>
+        <td>${p.titulo}</td>
+        <td><span class="badge ${badgeCls} cal-status-btn" onclick="cycleCalStatus('${p.id}')" title="Clique para alterar">${CAL_STATUS_LABELS[st]}</span></td>
+      </tr>`;
+    }).join('') + `</tbody></table>`;
+}
+
+// ============================================================
+// FINANCEIRO — TRANSAÇÕES
+// ============================================================
+const TRANS_SEED = [
+  { id:'t1', tipo:'entrada', desc:'Komprão', valor:1833.34, data:'2026-10-08' },
+  { id:'t2', tipo:'entrada', desc:'Aviamentos Contes', valor:600.00, data:'2026-10-14' },
+  { id:'t3', tipo:'entrada', desc:'Publi Panda', valor:550.00, data:'2026-10-14' },
+  { id:'t4', tipo:'entrada', desc:'BEST — Bruna', valor:97.90, data:'2026-10-11' },
+  { id:'t5', tipo:'pendente', desc:'BEST — Paula', valor:87.90, data:'2026-10-15' },
+  { id:'t6', tipo:'pendente', desc:'BEST — Ana Karolina', valor:97.90, data:'2026-10-11', obs:'⚠️ Verificar' },
+  { id:'t7', tipo:'pendente', desc:'Andressa — Mentoria', valor:550.00, data:'2026-10-25' },
+  { id:'t8', tipo:'pendente', desc:'Panificadora Kelly', valor:500.00, data:'2026-10-29' },
+];
+
+function getTransacoes() {
+  const saved = localStorage.getItem('ea_transacoes');
+  if (saved) { try { return JSON.parse(saved); } catch { return TRANS_SEED; } }
+  localStorage.setItem('ea_transacoes', JSON.stringify(TRANS_SEED));
+  return TRANS_SEED;
+}
+function setTransacoes(t) { localStorage.setItem('ea_transacoes', JSON.stringify(t)); }
+
+function renderFinanceiro() {
+  const trans = getTransacoes();
+  const entradas = trans.filter(t=>t.tipo==='entrada').reduce((a,t)=>a+t.valor,0);
+  const pendentes = trans.filter(t=>t.tipo==='pendente').reduce((a,t)=>a+t.valor,0);
+  const saidas = trans.filter(t=>t.tipo==='saida').reduce((a,t)=>a+t.valor,0);
+  const projetado = entradas + pendentes - saidas;
+  const meta = 6000;
+  const pctEntrou = Math.round(entradas/meta*100);
+  const pctProj = Math.round(projetado/meta*100);
+
+  const fmt = v => 'R$' + v.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
+  if (document.getElementById('fin-entrou')) {
+    document.getElementById('fin-entrou').textContent = fmt(entradas);
+    document.getElementById('fin-pendente').textContent = fmt(pendentes);
+    document.getElementById('fin-projetado').textContent = fmt(projetado);
+    document.getElementById('fin-projetado-sub').textContent = `${pctProj}% da meta de R$6.000`;
+    document.getElementById('fin-gap').textContent = fmt(Math.max(0, meta - projetado));
+    document.getElementById('fin-bar-entrou').style.width = pctEntrou + '%';
+    document.getElementById('fin-bar-proj').style.width = Math.min(100, pctProj) + '%';
+  }
+
+  const el = document.getElementById('transacoes-list'); if (!el) return;
+  const sorted = [...trans].sort((a,b)=>b.data.localeCompare(a.data));
+  if (!sorted.length) { el.innerHTML='<p style="color:var(--gray);font-size:13px;padding:16px;text-align:center">Nenhuma movimentação.</p>'; return; }
+  el.innerHTML = sorted.map(t => `<div class="trans-item">
+    <span class="badge ${t.tipo==='entrada'?'badge-green':t.tipo==='saida'?'badge-red':'badge-yellow'}">${t.tipo==='entrada'?'✅ Entrada':t.tipo==='saida'?'💸 Saída':'⏳ Pendente'}</span>
+    <span style="flex:1;font-size:13px">${t.desc}${t.obs?` <em style="color:var(--orange);font-size:11px">${t.obs}</em>`:''}</span>
+    <span style="font-size:11px;color:var(--gray)">${t.data?formatDate(t.data):''}</span>
+    <span class="trans-valor ${t.tipo}">${t.tipo==='saida'?'−':'+'} R$${t.valor.toLocaleString('pt-BR',{minimumFractionDigits:2})}</span>
+    <button class="copy-btn" onclick="deleteTransacao('${t.id}')" style="color:var(--red)">✕</button>
+  </div>`).join('');
+}
+
+function openAddTransacao() {
+  document.getElementById('trans-desc').value=''; document.getElementById('trans-valor').value='';
+  document.getElementById('trans-obs').value=''; document.getElementById('trans-data').value=today();
+  document.getElementById('trans-tipo').selectedIndex=0;
+  openModal('modal-add-transacao');
+}
+
+function saveTransacao() {
+  const desc = document.getElementById('trans-desc').value.trim();
+  const valor = parseFloat(document.getElementById('trans-valor').value);
+  if (!desc||isNaN(valor)) { showToast('Informe descrição e valor','error'); return; }
+  const trans = getTransacoes();
+  trans.push({ id:'t'+Date.now(), tipo:document.getElementById('trans-tipo').value, desc, valor, data:document.getElementById('trans-data').value, obs:document.getElementById('trans-obs').value.trim()||undefined });
+  setTransacoes(trans); closeModal('modal-add-transacao'); renderFinanceiro(); showToast('Lançamento salvo! ✅','success');
+}
+
+function deleteTransacao(id) {
+  if (!confirm('Remover esta movimentação?')) return;
+  setTransacoes(getTransacoes().filter(t=>t.id!==id)); renderFinanceiro(); showToast('Removido','success');
+}
+
+// ============================================================
+// CLIENTES ATIVOS
+// ============================================================
+const KOMPRAO_VIDEOS_LOJA = 8, KOMPRAO_VIDEOS_CASA = 7;
+
+function getKompraoVideos() {
+  try {
+    const raw = JSON.parse(localStorage.getItem('ea_komprao_vids')||'{}');
+    // Migra formato antigo (boolean) para novo { done, tema }
+    const out = {};
+    for (const k in raw) {
+      if (typeof raw[k] === 'boolean') out[k] = { done: raw[k], tema: '' };
+      else out[k] = raw[k];
+    }
+    return out;
+  } catch { return {}; }
+}
+function setKompraoVideos(v) { localStorage.setItem('ea_komprao_vids', JSON.stringify(v)); }
+function toggleKompraoVideo(key) {
+  const v=getKompraoVideos();
+  if (!v[key]) v[key]={done:false,tema:''};
+  v[key].done = !v[key].done;
+  setKompraoVideos(v); renderClientes();
+}
+function saveKompraoTema(key, val) {
+  const v=getKompraoVideos();
+  if (!v[key]) v[key]={done:false,tema:''};
+  v[key].tema = val;
+  setKompraoVideos(v);
+}
+
+function getAviamentosConfig() { try { return JSON.parse(localStorage.getItem('ea_aviamentos')||JSON.stringify({ strategy:'stories', entregas:[{id:'a1',text:'Roteiro de stories semanal',prazo:'Toda segunda'},{id:'a2',text:'Publicação stories (6 por semana)',prazo:'Toda semana'}] })); } catch { return {strategy:'stories',entregas:[]}; } }
+function setAviamentosConfig(c) { localStorage.setItem('ea_aviamentos', JSON.stringify(c)); }
+
+function setAviamentosStrategy(val) { const c=getAviamentosConfig(); c.strategy=val; setAviamentosConfig(c); renderClientes(); }
+function addAviamentosEntrega() {
+  const input=document.getElementById('avi-entrega-input'); const text=input?.value.trim(); if(!text) return;
+  const c=getAviamentosConfig(); c.entregas.push({id:'a-'+Date.now(),text,prazo:'Mensal'}); setAviamentosConfig(c); input.value=''; renderClientes();
+}
+function deleteAviamentosEntrega(id) { const c=getAviamentosConfig(); c.entregas=c.entregas.filter(e=>e.id!==id); setAviamentosConfig(c); renderClientes(); }
+
+function getClientesExtras() { try { return JSON.parse(localStorage.getItem('ea_clientes_extras')||'[]'); } catch { return []; } }
+function setClientesExtras(c) { localStorage.setItem('ea_clientes_extras', JSON.stringify(c)); }
+
+function getClienteEntregas() { try { return JSON.parse(localStorage.getItem('ea_entregas')||'{}'); } catch { return {}; } }
+function setClienteEntregas(e) { localStorage.setItem('ea_entregas', JSON.stringify(e)); }
+function toggleEntrega(id, checked) { const e=getClienteEntregas(); e[id]=checked; setClienteEntregas(e); renderClientes(); }
+
+function getKellyChecks() { try { return JSON.parse(localStorage.getItem('ea_kelly')||'{}'); } catch { return {}; } }
+function setKellyChecks(c) { localStorage.setItem('ea_kelly', JSON.stringify(c)); }
+function toggleKelly(key) { const c=getKellyChecks(); c[key]=!c[key]; setKellyChecks(c); renderClientes(); }
+
+function renderClientes() {
+  const el = document.getElementById('clientes-container'); if (!el) return;
+  const done = getClienteEntregas();
+  const kompraoVids = getKompraoVideos();
+  const aviConfig = getAviamentosConfig();
+  const kellyChecks = getKellyChecks();
+  const extras = getClientesExtras();
+
+  // ---- KOMPRÃO ----
+  const lojaCount = Array.from({length:KOMPRAO_VIDEOS_LOJA},(_,i)=>(kompraoVids['loja-'+i]?.done)?1:0).reduce((a,b)=>a+b,0);
+  const casaCount = Array.from({length:KOMPRAO_VIDEOS_CASA},(_,i)=>(kompraoVids['casa-'+i]?.done)?1:0).reduce((a,b)=>a+b,0);
+  const videoItemHtml = (prefix, i, vids) => {
+    const key = prefix+'-'+i;
+    const vid = vids[key] || {done:false, tema:''};
+    const label = prefix==='loja'?`Vídeo loja ${i+1}`:`Vídeo casa ${i+1}`;
+    return `<div class="video-item ${vid.done?'done':''}" style="flex-direction:column;align-items:flex-start;gap:4px;padding:6px 0">
+      <div style="display:flex;align-items:center;gap:6px">
+        <input type="checkbox" ${vid.done?'checked':''} onchange="toggleKompraoVideo('${key}')" accent-color="var(--green)">
+        <span style="${vid.done?'text-decoration:line-through;color:var(--gray)':''}">${label}</span>
+      </div>
+      <input type="text" value="${vid.tema||''}" placeholder="Tema / título do vídeo..."
+        style="width:100%;font-size:11px;padding:3px 6px;border:1px solid #e0d9ce;border-radius:5px;background:var(--cream);color:var(--brown);outline:none"
+        onblur="saveKompraoTema('${key}',this.value)"
+        onkeydown="if(event.key==='Enter')this.blur()">
+    </div>`;
+  }
+  const kompraoHtml = `<div class="cliente-card">
+    <div class="cliente-header">
+      <div><div class="cliente-nome" style="border-left:4px solid var(--green);padding-left:10px">Komprão</div><div style="font-size:12px;color:var(--gray);margin-top:2px;padding-left:14px">Contrato anual · Gerenciamento completo de social media</div></div>
+      <div class="cliente-valor">R$1.833/mês</div>
+    </div>
+    <div style="font-size:12px;font-weight:600;color:var(--brown);margin-bottom:8px">📹 15 vídeos mensais — ${lojaCount+casaCount}/15 concluídos</div>
+    <div class="video-grid">
+      <div class="video-col">
+        <div class="video-col-title"><span>🏪 Em loja (${lojaCount}/${KOMPRAO_VIDEOS_LOJA})</span><span style="color:var(--gray);font-weight:400">1 visita/mês</span></div>
+        ${Array.from({length:KOMPRAO_VIDEOS_LOJA},(_,i)=>videoItemHtml('loja',i,kompraoVids)).join('')}
+      </div>
+      <div class="video-col">
+        <div class="video-col-title"><span>🏠 Em casa (${casaCount}/${KOMPRAO_VIDEOS_CASA})</span><span style="color:var(--gray);font-weight:400">Gravar aos poucos</span></div>
+        ${Array.from({length:KOMPRAO_VIDEOS_CASA},(_,i)=>videoItemHtml('casa',i,kompraoVids)).join('')}
+      </div>
+    </div>
+    <div class="entrega-item" style="margin-top:10px">
+      <input type="checkbox" ${done['k-plataforma']?'checked':''} onchange="toggleEntrega('k-plataforma',this.checked)" accent-color="var(--green)">
+      <span class="entrega-text ${done['k-plataforma']?'done':''}">Vídeos editados enviados para aprovação na plataforma</span>
+      <span class="entrega-prazo">Por lote</span>
+    </div>
+    <div class="entrega-item">
+      <input type="checkbox" ${done['k-relatorio']?'checked':''} onchange="toggleEntrega('k-relatorio',this.checked)" accent-color="var(--green)">
+      <span class="entrega-text ${done['k-relatorio']?'done':''}">Relatório mensal de desempenho</span>
+      <span class="entrega-prazo">Todo dia 1º</span>
+    </div>
+  </div>`;
+
+  // ---- AVIAMENTOS ----
+  const stratMap = {stories:'Stories',reels:'Reels',posts:'Posts'};
+  const aviHtml = `<div class="cliente-card">
+    <div class="cliente-header">
+      <div><div class="cliente-nome" style="border-left:4px solid var(--blue);padding-left:10px">Aviamentos Contes</div><div style="font-size:12px;color:var(--gray);margin-top:2px;padding-left:14px">Pacote variável · Estratégia pode mudar todo mês</div></div>
+      <div class="cliente-valor">R$600/mês</div>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+      <span style="font-size:12px;font-weight:600;color:var(--brown)">Estratégia este mês:</span>
+      <select class="strategy-select" onchange="setAviamentosStrategy(this.value)">
+        ${['stories','reels','posts'].map(s=>`<option value="${s}" ${aviConfig.strategy===s?'selected':''}>${stratMap[s]}</option>`).join('')}
+      </select>
+    </div>
+    <div style="font-size:12px;font-weight:600;color:var(--brown);margin-bottom:8px">Entregas:</div>
+    ${aviConfig.entregas.map(e=>`<div class="entrega-item">
+      <input type="checkbox" ${done[e.id]?'checked':''} onchange="toggleEntrega('${e.id}',this.checked)" accent-color="var(--blue)">
+      <span class="entrega-text ${done[e.id]?'done':''}">${e.text}</span>
+      <span class="entrega-prazo">${e.prazo}</span>
+      <button class="copy-btn" onclick="deleteAviamentosEntrega('${e.id}')" style="color:var(--red);margin-left:4px">✕</button>
+    </div>`).join('')}
+    <div class="task-add" style="margin-top:10px"><input type="text" placeholder="+ Adicionar entrega" id="avi-entrega-input" onkeydown="if(event.key==='Enter')addAviamentosEntrega()"><button onclick="addAviamentosEntrega()">+</button></div>
+  </div>`;
+
+  // ---- PANIFICADORA KELLY ----
+  const kellyHtml = `<div class="cliente-card">
+    <div class="cliente-header">
+      <div><div class="cliente-nome" style="border-left:4px solid var(--yellow);padding-left:10px">Panificadora Kelly</div><div style="font-size:12px;color:var(--gray);margin-top:2px;padding-left:14px">Publicidade mensal · 2 reels + 10 stories em 2 visitas</div></div>
+      <div class="cliente-valor">R$500/publi</div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:8px">
+      <div class="video-col">
+        <div class="video-col-title">📍 Visita 1 — 1ª quinzena</div>
+        ${['stories-v1-1','stories-v1-2','stories-v1-3','stories-v1-4','stories-v1-5','reel-v1'].map((key,i)=>`<div class="video-item ${kellyChecks[key]?'done':''}">
+          <input type="checkbox" ${kellyChecks[key]?'checked':''} onchange="toggleKelly('${key}')" accent-color="var(--yellow)">
+          <span>${i<5?'Story '+(i+1):'Reel'}</span>
+        </div>`).join('')}
+      </div>
+      <div class="video-col">
+        <div class="video-col-title">📍 Visita 2 — 2ª quinzena</div>
+        ${['stories-v2-1','stories-v2-2','stories-v2-3','stories-v2-4','stories-v2-5','reel-v2'].map((key,i)=>`<div class="video-item ${kellyChecks[key]?'done':''}">
+          <input type="checkbox" ${kellyChecks[key]?'checked':''} onchange="toggleKelly('${key}')" accent-color="var(--yellow)">
+          <span>${i<5?'Story '+(i+1):'Reel'}</span>
+        </div>`).join('')}
+      </div>
+    </div>
+    <div class="entrega-item" style="margin-top:10px">
+      <input type="checkbox" ${kellyChecks['relatorio']?'checked':''} onchange="toggleKelly('relatorio')" accent-color="var(--yellow)">
+      <span class="entrega-text ${kellyChecks['relatorio']?'done':''}">Relatório de alcance</span>
+      <span class="entrega-prazo">7 dias após postagem</span>
+    </div>
+  </div>`;
+
+  // ---- CLIENTES EXTRAS ----
+  const extrasHtml = extras.map(c => `<div class="cliente-card">
+    <div class="cliente-header">
+      <div><div class="cliente-nome" style="border-left:4px solid ${c.cor};padding-left:10px">${c.nome}</div><div style="font-size:12px;color:var(--gray);margin-top:2px;padding-left:14px">${c.tipo} · ${c.obs}</div></div>
+      <div style="display:flex;align-items:center;gap:8px"><div class="cliente-valor">${c.valor}</div><button class="copy-btn" onclick="deleteClienteExtra('${c.id}')" style="color:var(--red)">✕</button></div>
+    </div>
+    <div style="font-size:12px;font-weight:600;color:var(--brown);margin-bottom:8px">Entregas:</div>
+    ${(c.entregas||[]).map(e=>`<div class="entrega-item">
+      <input type="checkbox" ${done[e.id]?'checked':''} onchange="toggleEntrega('${e.id}',this.checked)">
+      <span class="entrega-text ${done[e.id]?'done':''}">${e.text}</span>
+    </div>`).join('')}
+    <div class="task-add" style="margin-top:10px"><input type="text" placeholder="+ Adicionar entrega" id="entrega-input-${c.id}" onkeydown="if(event.key==='Enter')addEntregaExtra('${c.id}')"><button onclick="addEntregaExtra('${c.id}')">+</button></div>
+  </div>`).join('');
+
+  el.innerHTML = kompraoHtml + aviHtml + kellyHtml + extrasHtml;
+}
+
+function openAddCliente() {
+  ['cli-nome','cli-valor','cli-tipo','cli-obs','cli-entrega'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  openModal('modal-add-cliente');
+}
+
+function saveCliente() {
+  const nome = document.getElementById('cli-nome').value.trim(); if (!nome){showToast('Informe o nome','error');return;}
+  const extras = getClientesExtras();
+  const newId = 'cli-'+Date.now();
+  const entrega = document.getElementById('cli-entrega').value.trim();
+  extras.push({ id:newId, nome, valor:document.getElementById('cli-valor').value||'—', tipo:document.getElementById('cli-tipo').value||'Publi esporádica', obs:document.getElementById('cli-obs').value||'', cor:document.getElementById('cli-cor').value, entregas:entrega?[{id:'e-'+Date.now(),text:entrega}]:[] });
+  setClientesExtras(extras); closeModal('modal-add-cliente'); renderClientes(); showToast('Cliente adicionado! ✅','success');
+}
+
+function deleteClienteExtra(id) { if(!confirm('Remover cliente?'))return; setClientesExtras(getClientesExtras().filter(c=>c.id!==id)); renderClientes(); }
+
+function addEntregaExtra(clienteId) {
+  const input=document.getElementById('entrega-input-'+clienteId); const text=input?.value.trim(); if(!text) return;
+  const extras=getClientesExtras(); const c=extras.find(x=>x.id===clienteId); if(!c)return;
+  if(!c.entregas)c.entregas=[];
+  c.entregas.push({id:'e-'+Date.now(),text}); setClientesExtras(extras); input.value=''; renderClientes();
+}
+
+// ============================================================
+// BLACK FRIDAY
+// ============================================================
+const BF_START = new Date('2026-10-23');
+const BF_END = new Date('2026-11-05');
+const BF_STEPS = [
+  { data:'23–24/10', titulo:'Teaser — "Algo especial vem aí"', desc:'2 stories misteriosos + 1 post de antecipação. Não revelar o produto ainda.' },
+  { data:'25–26/10', titulo:'Revelação da oferta', desc:'Post + stories revelando a BEST com a oferta de Black. CTA: "Entra na lista de espera".' },
+  { data:'27–29/10', titulo:'Provas sociais', desc:'3 posts/stories com depoimentos de Bests atuais. Rotina do dia a dia com a BEST.' },
+  { data:'30/10–01/11', titulo:'Urgência + bastidor', desc:'Mostrar o processo por dentro. "Já tem X pessoas na fila". Contagem regressiva.' },
+  { data:'02–04/11', titulo:'Última chance', desc:'Stories de last call. Reforçar o que elas perdem se não entrarem. CTA forte.' },
+  { data:'05/11', titulo:'Encerramento', desc:'Agradecimento + anunciar quantas entraram. Fechar com chave de ouro para as novas.' },
+];
+const BF_CHECKLIST_ITEMS = [
+  'Definir oferta da Black Friday (desconto ou bônus?)',
+  'Criar link especial de Black Friday na bio page',
+  'Preparar 5+ depoimentos de Bests para postar',
+  'Montar roteiro de stories dias 23–05/11',
+  'Criar posts de feed para cada fase da campanha',
+  'Configurar ManyChat para captar interessadas',
+  'Definir meta de novas inscritas (meta: 11)',
+  'Preparar email/WPP de boas-vindas para novas Bests',
+];
+
+function getBfChecklist() { try { return JSON.parse(localStorage.getItem('ea_bf_checklist')||'{}'); } catch { return {}; } }
+function setBfChecklist(c) { localStorage.setItem('ea_bf_checklist', JSON.stringify(c)); }
+
+function renderBF() {
+  const now = new Date(); const diff = Math.ceil((BF_START - now) / (1000*60*60*24));
+  const el = document.getElementById('bf-countdown');
+  if (diff > 0) {
+    el.innerHTML = `<div class="countdown-title">Faltam</div><div class="countdown-number">${diff}</div><div class="countdown-sub">dias para o início da campanha (23/10)</div>`;
+  } else if (now <= BF_END) {
+    const daysLeft = Math.ceil((BF_END - now) / (1000*60*60*24));
+    el.innerHTML = `<div class="countdown-title">🖤 CAMPANHA ATIVA</div><div class="countdown-number">${daysLeft}</div><div class="countdown-sub">dias restantes até o encerramento (05/11)</div>`;
+  } else {
+    el.innerHTML = `<div class="countdown-title">✅ Campanha encerrada</div><div class="countdown-number" style="font-size:32px">05/11</div><div class="countdown-sub">Analise os resultados e planeje o próximo lançamento</div>`;
+  }
+  const stepsEl = document.getElementById('bf-steps');
+  stepsEl.innerHTML = BF_STEPS.map((s,i) => `<div class="bf-step"><div class="bf-step-num">${i+1}</div><div class="bf-step-content"><div class="bf-step-title">${s.data} — ${s.titulo}</div><div class="bf-step-desc">${s.desc}</div></div></div>`).join('');
+  const chk = getBfChecklist();
+  const chkEl = document.getElementById('bf-checklist');
+  chkEl.innerHTML = BF_CHECKLIST_ITEMS.map((item,i) => `<div class="entrega-item"><input type="checkbox" ${chk[i]?'checked':''} onchange="toggleBfCheck(${i},this.checked)" accent-color="var(--pink)"><span class="entrega-text ${chk[i]?'done':''}">${item}</span></div>`).join('');
+  const notes = localStorage.getItem('ea_bf_notes')||'';
+  document.getElementById('bf-notes').value = notes;
+}
+
+function toggleBfCheck(i, v) { const c=getBfChecklist(); c[i]=v; setBfChecklist(c); renderBF(); }
+function saveBfNotes() { localStorage.setItem('ea_bf_notes', document.getElementById('bf-notes').value); }
+
+// ============================================================
+// BANCO DE GANCHOS
+// ============================================================
+const GANCHOS_BASE = [
+  { id:1, pilar:'Educar', text:'"[número] formas de [resultado desejado] que ninguém te ensina"' },
+  { id:2, pilar:'Educar', text:'"Para de fazer [erro comum] se você quer [resultado]"' },
+  { id:3, pilar:'Educar', text:'"O que acontece com o teu perfil quando você [ação errada]"' },
+  { id:4, pilar:'Educar', text:'"Faz assim e o algoritmo para de te ignorar"' },
+  { id:5, pilar:'Educar', text:'"[número] erros que travam o crescimento do teu Instagram (e você provavelmente comete)"' },
+  { id:6, pilar:'Educar', text:'"COMO [resultado em caixa alta] sem [obstáculo que ela odeia] 👇🏻"' },
+  { id:7, pilar:'Educar', text:'"Se eu começasse do zero hoje, eu faria exatamente isso"' },
+  { id:8, pilar:'Conectar', text:'"POV: são 22h, os filhos dormindo, e você finalmente sentou pra criar conteúdo"' },
+  { id:9, pilar:'Conectar', text:'"Ninguém te conta que ser mãe empreendedora é assim"' },
+  { id:10, pilar:'Conectar', text:'"Eu fui exatamente quem você é agora — e olha onde cheguei"' },
+  { id:11, pilar:'Conectar', text:'"Real acima de perfeito — e é isso que faz o perfil vender"' },
+  { id:12, pilar:'Conectar', text:'"O dia que eu quase desisti (e o que me fez ficar)"' },
+  { id:13, pilar:'Conectar', text:'"Mãe, empreendedora, cansada — e ainda assim aparecendo todo dia"' },
+  { id:14, pilar:'Converter', text:'"A aluna que não sabia o que postar criou [resultado real]"' },
+  { id:15, pilar:'Converter', text:'"O que mudou no perfil dela em 30 dias com o GPS do Perfil"' },
+  { id:16, pilar:'Converter', text:'"Se o Instagram do [personagem] fosse meu, eu mudaria tudo isso"' },
+  { id:17, pilar:'Converter', text:'"O que eu mudaria nesse perfil se fosse meu (análise real)"' },
+  { id:18, pilar:'Converter', text:'"[resultado específico] — esse foi o resultado de uma Best depois de [tempo]"' },
+  { id:19, pilar:'Todos', text:'"[dado ou fato surpreendente sobre Instagram] e isso muda tudo"' },
+  { id:20, pilar:'Todos', text:'"Roube as minhas ideias de conteúdo para [nicho]"' },
+];
+
+let ganchoFiltro = 'todos';
+
+function getGanchos() { try { return JSON.parse(localStorage.getItem('ea_ganchos')||JSON.stringify(GANCHOS_BASE)); } catch { return GANCHOS_BASE; } }
+function setGanchos(g) { localStorage.setItem('ea_ganchos', JSON.stringify(g)); }
+
+function setGanchoFilter(pilar, btn) {
+  ganchoFiltro = pilar;
+  document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderGanchos();
+}
+
+function renderGanchos() {
+  const search = (document.getElementById('gancho-search')?.value||'').toLowerCase();
+  let ganchos = getGanchos();
+  if (ganchoFiltro !== 'todos') ganchos = ganchos.filter(g => g.pilar===ganchoFiltro);
+  if (search) ganchos = ganchos.filter(g => g.text.toLowerCase().includes(search));
+  const el = document.getElementById('ganchos-list'); if (!el) return;
+  el.innerHTML = ganchos.map(g => {
+    const cls = { Educar:'pilar-educar', Conectar:'pilar-conectar', Converter:'pilar-converter', Todos:'pilar-todos' }[g.pilar]||'pilar-todos';
+    return `<div class="gancho-item">
+      <span class="gancho-pilar ${cls}">${g.pilar}</span>
+      <span class="gancho-text">${g.text}</span>
+      <button class="copy-btn" onclick="copyText(this,\`${g.text.replace(/`/g,'\\`')}\`)">📋</button>
+      <button class="copy-btn" onclick="deleteGancho(${g.id})" style="color:var(--red)">✕</button>
+    </div>`;
+  }).join('') || '<p style="color:var(--gray);font-size:13px;text-align:center;padding:24px">Nenhum gancho encontrado.</p>';
+}
+
+function openAddGancho() { document.getElementById('gancho-texto').value=''; document.getElementById('gancho-pilar').selectedIndex=0; openModal('modal-add-gancho'); }
+function saveGancho() {
+  const text=document.getElementById('gancho-texto').value.trim(); if (!text) { showToast('Escreva o gancho','error'); return; }
+  const ganchos=getGanchos(); ganchos.push({ id:Date.now(), pilar:document.getElementById('gancho-pilar').value, text });
+  setGanchos(ganchos); closeModal('modal-add-gancho'); renderGanchos(); showToast('Gancho salvo! ✅','success');
+}
+function deleteGancho(id) { if (!confirm('Remover gancho?')) return; setGanchos(getGanchos().filter(g=>g.id!==id)); renderGanchos(); }
+
+// ============================================================
+// INSTAGRAM PDF / RELATÓRIOS
+// ============================================================
+function getIgPdfs() { try { return JSON.parse(localStorage.getItem('ea_ig_pdfs')||'[]'); } catch { return []; } }
+function setIgPdfs(p) { localStorage.setItem('ea_ig_pdfs', JSON.stringify(p)); }
+
+function handleIgPdfUpload(input) {
+  const files = Array.from(input.files); if (!files.length) return;
+  const existing = getIgPdfs();
+  let processed = 0;
+  files.forEach(file => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      existing.push({ id:'pdf-'+Date.now()+Math.random(), nome:file.name, tipo:file.type, data:today(), dataUrl:e.target.result, size:(file.size/1024).toFixed(1)+'KB' });
+      processed++;
+      if (processed === files.length) { setIgPdfs(existing); renderIgPdfs(); showToast('Arquivo salvo! ✅','success'); }
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+function renderIgPdfs() {
+  const el = document.getElementById('ig-pdf-list'); if (!el) return;
+  const pdfs = getIgPdfs();
+  const statusEl = document.getElementById('ig-pdf-status');
+  if (statusEl) statusEl.textContent = pdfs.length ? `${pdfs.length} arquivo(s) salvo(s)` : '';
+  if (!pdfs.length) { el.innerHTML='<p style="font-size:12px;color:var(--gray)">Nenhum arquivo salvo ainda.</p>'; return; }
+  el.innerHTML = pdfs.map(p => `<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--gray-light)">
+    <span style="font-size:18px">${p.tipo?.includes('pdf')?'📄':'🖼️'}</span>
+    <div style="flex:1">
+      <div style="font-size:13px;font-weight:600">${p.nome}</div>
+      <div style="font-size:11px;color:var(--gray)">${formatDate(p.data)} · ${p.size}</div>
+    </div>
+    <a href="${p.dataUrl}" target="_blank" class="btn btn-ghost btn-sm">Abrir</a>
+    <button class="copy-btn" onclick="deleteIgPdf('${p.id}')" style="color:var(--red)">✕</button>
+  </div>`).join('');
+}
+
+function deleteIgPdf(id) { if(!confirm('Remover arquivo?'))return; setIgPdfs(getIgPdfs().filter(p=>p.id!==id)); renderIgPdfs(); }
+
+// ============================================================
+// HELPERS
+// ============================================================
+// SINCRONIZAÇÃO — GITHUB GIST
+// ============================================================
+const SYNC_FILE = 'ea_data.json';
+
+function getSyncConfig() { try { return JSON.parse(localStorage.getItem('ea_sync_cfg')||'{}'); } catch { return {}; } }
+function setSyncConfig(c) { localStorage.setItem('ea_sync_cfg', JSON.stringify(c)); }
+
+function getAllEAData() {
+  const data = {};
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i);
+    if (key && key.startsWith('ea_') && key !== 'ea_sync_cfg') data[key] = localStorage.getItem(key);
+  }
+  return data;
+}
+
+function restoreEAData(data) {
+  for (const key in data) {
+    if (key.startsWith('ea_') && key !== 'ea_sync_cfg') localStorage.setItem(key, data[key]);
+  }
+}
+
+function setSyncStatus(msg, ok) {
+  const el = document.getElementById('sync-status-label');
+  if (el) el.textContent = msg;
+  const st = document.getElementById('sync-gist-status');
+  if (st) { st.textContent = msg; st.style.color = ok === false ? '#c0392b' : ok ? 'var(--green)' : 'var(--gray)'; }
+}
+
+function setSyncBtnLoading(loading) {
+  const btn = document.getElementById('btn-sync-save');
+  if (!btn) return;
+  btn.classList.toggle('syncing', loading);
+  btn.textContent = loading ? '⏳ Salvando…' : '💾 Salvar';
+}
+
+async function syncToGist() {
+  const { token, gistId } = getSyncConfig();
+  if (!token || !gistId) { openModal('modal-sync'); showToast('Configure a sincronização primeiro','error'); return; }
+  setSyncBtnLoading(true);
+  try {
+    const data = getAllEAData();
+    const r = await fetch(`https://api.github.com/gists/${gistId}`, {
+      method: 'PATCH',
+      headers: { 'Authorization': `token ${token}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ files: { [SYNC_FILE]: { content: JSON.stringify(data) } } })
+    });
+    if (!r.ok) throw new Error((await r.json()).message || r.status);
+    const now = new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+    localStorage.setItem('ea_last_sync', new Date().toISOString());
+    setSyncStatus(`☁️ Salvo às ${now}`, true);
+    showToast('Dados salvos na nuvem ☁️','success');
+  } catch(e) {
+    setSyncStatus('❌ Erro ao salvar', false);
+    showToast('Erro ao salvar: '+e.message,'error');
+  } finally { setSyncBtnLoading(false); }
+}
+
+async function loadFromGist(manual) {
+  const { token, gistId } = getSyncConfig();
+  if (!token || !gistId) { if (manual) { openModal('modal-sync'); showToast('Configure a sincronização primeiro','error'); } return; }
+  if (manual) setSyncStatus('⏳ Carregando da nuvem…');
+  try {
+    const r = await fetch(`https://api.github.com/gists/${gistId}`, {
+      headers: { 'Authorization': `token ${token}` }
+    });
+    if (!r.ok) throw new Error((await r.json()).message || r.status);
+    const json = await r.json();
+    const content = json.files?.[SYNC_FILE]?.content;
+    if (!content) { if (manual) setSyncStatus('Gist vazio — nada para carregar'); return; }
+    restoreEAData(JSON.parse(content));
+    const now = new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+    localStorage.setItem('ea_last_sync', new Date().toISOString());
+    setSyncStatus(`☁️ Atualizado às ${now}`, true);
+    if (manual) { showToast('Dados carregados da nuvem! ☁️','success'); setTimeout(()=>location.reload(),1200); }
+  } catch(e) {
+    if (manual) { setSyncStatus('❌ Erro ao carregar', false); showToast('Erro: '+e.message,'error'); }
+  }
+}
+
+async function createGist() {
+  const token = document.getElementById('sync-gh-token').value.trim();
+  if (!token) { showToast('Cole o token do GitHub primeiro','error'); return; }
+  setSyncStatus('⏳ Criando Gist…');
+  try {
+    const data = getAllEAData();
+    const r = await fetch('https://api.github.com/gists', {
+      method: 'POST',
+      headers: { 'Authorization': `token ${token}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ description:'EA Studio — Escritório Virtual', public:false, files:{ [SYNC_FILE]:{ content: JSON.stringify(data) } } })
+    });
+    const json = await r.json();
+    if (!r.ok) throw new Error(json.message || r.status);
+    document.getElementById('sync-gist-id').value = json.id;
+    const cfg = getSyncConfig(); cfg.token = token; cfg.gistId = json.id; setSyncConfig(cfg);
+    setSyncStatus('✅ Gist criado e configurado!', true);
+    showToast('Gist criado! ✅','success');
+    renderSyncStatus();
+  } catch(e) { setSyncStatus('❌ Erro: '+e.message, false); showToast('Erro: '+e.message,'error'); }
+}
+
+function saveSyncConfig() {
+  const token = document.getElementById('sync-gh-token').value.trim();
+  const gistId = document.getElementById('sync-gist-id').value.trim();
+  if (!token || !gistId) { showToast('Preencha token e ID do Gist','error'); return; }
+  setSyncConfig({ token, gistId });
+  showToast('Configuração salva ✅','success');
+  renderSyncStatus();
+}
+
+function renderSyncStatus() {
+  const { token, gistId } = getSyncConfig();
+  const lastSync = localStorage.getItem('ea_last_sync');
+  if (token && gistId) {
+    const label = lastSync
+      ? `☁️ Sync ativo · ${new Date(lastSync).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})}`
+      : '☁️ Sync configurado';
+    setSyncStatus(label, true);
+    // Preenche os inputs do modal se já tiver config
+    const ti = document.getElementById('sync-gh-token'); if (ti && !ti.value) ti.value = token;
+    const gi = document.getElementById('sync-gist-id'); if (gi) gi.value = gistId;
+  } else {
+    setSyncStatus('☁️ Sem sincronização');
+  }
+}
+
+function exportData() {
+  const data = getAllEAData();
+  const blob = new Blob([JSON.stringify(data, null, 2)], {type:'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `ea-studio-backup-${new Date().toISOString().split('T')[0]}.json`;
+  a.click();
+  showToast('Backup exportado 📤','success');
+}
+
+function importData(input) {
+  const file = input.files[0]; if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const data = JSON.parse(e.target.result);
+      const keys = Object.keys(data).filter(k => k.startsWith('ea_'));
+      if (!keys.length) { showToast('Arquivo inválido ou vazio','error'); return; }
+      restoreEAData(data);
+      showToast(`${keys.length} chaves importadas! Recarregando…`,'success');
+      setTimeout(() => location.reload(), 1400);
+    } catch { showToast('Arquivo JSON inválido','error'); }
+  };
+  reader.readAsText(file);
+}
+
+// ============================================================
+// AUTENTICAÇÃO
+// ============================================================
+// Para mudar a senha: gere o SHA-256 da nova senha em https://emn178.github.io/online-tools/sha256.html
+// e substitua o valor abaixo. A senha atual é: ea2026
+const SENHA_HASH = '329d61771d868f6fb4bbd208d03ec906877b19f083fceaad9ff4b6d76b5143b4';
+
+async function hashStr(str) {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+  return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+
+async function checkLogin() {
+  const pwd = document.getElementById('login-pwd').value;
+  if (!pwd) { document.getElementById('login-error').textContent='Digite a senha.'; return; }
+  const h = await hashStr(pwd);
+  if (h === SENHA_HASH) {
+    sessionStorage.setItem('ea_auth','1');
+    document.getElementById('login-overlay').classList.add('hidden');
+    document.getElementById('login-error').textContent='';
+  } else {
+    document.getElementById('login-pwd').value='';
+    document.getElementById('login-error').textContent='Senha incorreta. Tente novamente.';
+    document.getElementById('login-pwd').focus();
+  }
+}
+
+function initAuth() {
+  if (sessionStorage.getItem('ea_auth') === '1') {
+    document.getElementById('login-overlay').classList.add('hidden');
+  } else {
+    setTimeout(() => document.getElementById('login-pwd').focus(), 100);
+  }
+}
+
+// ============================================================
+function parseResult(r) {
+  try { if (r&&r.structuredContent) return r.structuredContent.results||[]; return JSON.parse(r?.content?.[0]?.text||'{}').results||[]; } catch { return []; }
+}
+function today() { return new Date().toISOString().split('T')[0]; }
+function formatDate(d) {
+  if (!d) return '';
+  // Evita timezone offset parsing YYYY-MM-DD como dia anterior
+  const [y,m,day] = d.split('-');
+  if (y && m && day) return `${day}/${m}/${y}`;
+  return new Date(d).toLocaleDateString('pt-BR');
+}
+
+function badgeCanal(v) { const m={'Instagram':'pink','WhatsApp':'green','Formulário':'blue','Indicação':'purple','Grupo gratuito':'yellow','ManyChat':'purple'}; return `<span class="badge badge-${m[v]||'gray'}">${v||'—'}</span>`; }
+function badgeInteresse(v) { const m={'GPS do Perfil':'orange','BEST Criadora':'pink','Consultoria Express':'blue','Mentoria':'purple','Outro':'gray'}; return `<span class="badge badge-${m[v]||'gray'}">${v||'—'}</span>`; }
+function badgeEstagio(v) { const m={'Lead frio':'gray','Conversa iniciada':'blue','Proposta enviada':'yellow','Fechado':'green','Perdido':'red'}; return `<span class="badge badge-${m[v]||'gray'}">${v||'—'}</span>`; }
+
+function openModal(id) { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+function showToast(msg, type) { const t=document.getElementById('toast'); t.textContent=msg; t.className='toast show '+(type||''); setTimeout(()=>t.className='toast',3000); }
+function copyText(btn, text) { navigator.clipboard.writeText(text).then(()=>{ const o=btn.textContent; btn.textContent='✅'; setTimeout(()=>btn.textContent=o,1500); }); }
+
+// ============================================================
+// INIT
+// ============================================================
+initAuth();
+renderSyncStatus();
+loadFromGist(false); // carrega dados da nuvem em background ao abrir
+loadTracker(); loadCRM();
+renderFinanceiro();
+renderIgPdfs();
+document.querySelectorAll('.modal-overlay').forEach(o => o.addEventListener('click', e => { if (e.target===o) o.classList.remove('open'); }));
+</script>
+</body>
+</html>
